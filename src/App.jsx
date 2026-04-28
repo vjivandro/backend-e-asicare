@@ -9,19 +9,24 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-   useEffect(() => {
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const uid = currentUser.uid;
 
-        // ambil role dari Firestore
+        // cek admin
         const adminRef = doc(db, "admins", uid);
         const adminSnap = await getDoc(adminRef);
 
         if (adminSnap.exists()) {
+          // ambil data user (username dll)
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+
           setUser({
             ...currentUser,
-            ...adminSnap.data()
+            ...adminSnap.data(),
+            ...(userSnap.exists() ? userSnap.data() : {}),
           });
         } else {
           setUser(null);
@@ -41,7 +46,7 @@ export default function App() {
   }
 
   return user ? (
-    <Dashboard />
+    <Dashboard user={user} />
 
   ) : (
     <Login setUser={setUser} />

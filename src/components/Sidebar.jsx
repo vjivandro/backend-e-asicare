@@ -1,17 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     LayoutDashboard,
     Database,
     Settings,
     Menu,
     Bell,
-    Search
+    Search,
+    Users,
+    UserCheck2,
+    Newspaper
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+
+import AKGPage from "../pages/AKGPage";
+import UserManagementPage from "../pages/UserManagementPage";
+import AdminPage from "../pages/AdminPage";
+import EdukasiPage from "../pages/EdukasiPage";
+import PerilakuMenyusuiPage from "../pages/PerilakuMenyusuiPage";
+import KelancaranASIPage from "../pages/KelancaranASIPage";
 
 export default function Layout({ children, user }) {
     const [open, setOpen] = useState(true);
+    const [page, setPage] = useState(() => {
+        return localStorage.getItem("page") || "edukasi";
+    });
+    const [openMenu, setOpenMenu] = useState({
+        monitoring: true,
+    });
+
+    useEffect(() => {
+        localStorage.setItem("page", page);
+    }, [page]);
+
+    const handleLogout = async () => {
+        await signOut(auth);
+    };
 
     return (
         <div className="flex">
@@ -29,8 +55,75 @@ export default function Layout({ children, user }) {
 
                 {/* Menu */}
                 <nav className="mt-6 space-y-2">
-                    <SidebarItem icon={<LayoutDashboard />} label="Dashboard" open={open} active />
-                    <SidebarItem icon={<Database />} label="Data AKG" open={open} />
+                    <SidebarItem
+                      icon={<LayoutDashboard />}
+                      label="Dashboard"
+                      open={open}
+                      active={page === "dashboard"}
+                      onClick={() => setPage("dashboard")}
+                    />
+                    <div>
+                      <SidebarItem
+                        icon={<Database />}
+                        label={`Monitoring ${openMenu.monitoring ? "▾" : "▸"}`}
+                        open={open}
+                        active={["akg","menyusui","asi"].includes(page)}
+                        onClick={() =>
+                          setOpenMenu((prev) => ({
+                            ...prev,
+                            monitoring: !prev.monitoring,
+                          }))
+                        }
+                      />
+
+                      {open && openMenu.monitoring && (
+                        <div className="ml-10 mt-1 space-y-1">
+                          <SidebarItem
+                            label="Data AKG"
+                            open={open}
+                            active={page === "akg"}
+                            onClick={() => setPage("akg")}
+                          />
+                          <SidebarItem
+                            label="Perilaku Menyusui"
+                            open={open}
+                            active={page === "menyusui"}
+                            onClick={() => setPage("menyusui")}
+                          />
+                          <SidebarItem
+                            label="Kelancaran ASI"
+                            open={open}
+                            active={page === "asi"}
+                            onClick={() => setPage("asi")}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <SidebarItem
+                      icon={<Newspaper />}
+                      label="Edukasi"
+                      open={open}
+                      active={page === "edukasi"}
+                      onClick={() => setPage("edukasi")}
+                    />
+
+                    <SidebarItem
+                      icon={<Users />}
+                      label="Pengguna"
+                      open={open}
+                      active={page === "users"}
+                      onClick={() => setPage("users")}
+                    />
+
+                    <SidebarItem
+                      icon={<UserCheck2 />}
+                      label="Admin"
+                      open={open}
+                      active={page === "admins"}
+                      onClick={() => setPage("admins")}
+                    />
+
                 </nav>
 
                 {/* Bottom */}
@@ -71,30 +164,35 @@ export default function Layout({ children, user }) {
                             onClick={handleLogout}
                             className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
                         >
-                            Logout
+                            <FontAwesomeIcon icon={faSignOutAlt} />
                         </button>
                     </div>
                 </div>
 
                 {/* Page Content */}
-                <div className="p-6">{children}</div>
+                <div className="p-6">
+                  {page === "dashboard" && children}
+                  {page === "akg" && <AKGPage />}
+                  {page === "menyusui" && <PerilakuMenyusuiPage />}
+                  {page === "asi" && <KelancaranASIPage />}
+                  {page === "users" && <UserManagementPage />}
+                  {page === "admins" && <AdminPage />}
+                  {page === "edukasi" && <EdukasiPage />}
+                </div>
             </div>
         </div>
     );
 }
 
-function SidebarItem({ icon, label, open, active }) {
+function SidebarItem({ icon, label, open, active, onClick }) {
     return (
         <div
+            onClick={onClick}
             className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-xl cursor-pointer transition ${active ? "bg-white/20" : "hover:bg-white/10"
                 }`}
         >
-            {icon}
+            {icon && icon}
             {open && <span className="text-sm">{label}</span>}
         </div>
     );
 }
-
-const handleLogout = async () => {
-    await signOut(auth);
-};
