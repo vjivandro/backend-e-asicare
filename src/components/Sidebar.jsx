@@ -1,186 +1,136 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-    LayoutDashboard,
-    Database,
-    Settings,
-    Menu,
-    Bell,
-    Search,
-    Users,
-    UserCheck2,
-    Newspaper
+    LayoutDashboard, Database, Settings, Menu,
+    Users, UserCheck2, Newspaper, Image, MessageCircle
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "../services/firebase";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate, useLocation } from "react-router-dom";
 
-import AKGPage from "../pages/AKGPage";
-import UserManagementPage from "../pages/UserManagementPage";
-import AdminPage from "../pages/AdminPage";
-import EdukasiPage from "../pages/EdukasiPage";
-import PerilakuMenyusuiPage from "../pages/PerilakuMenyusuiPage";
-import KelancaranASIPage from "../pages/KelancaranASIPage";
-
-export default function Layout({ children, user }) {
-    const [open, setOpen] = useState(true);
-    const [page, setPage] = useState(() => {
-        return localStorage.getItem("page") || "edukasi";
-    });
-    const [openMenu, setOpenMenu] = useState({
-        monitoring: true,
-    });
-
-    useEffect(() => {
-        localStorage.setItem("page", page);
-    }, [page]);
+export default function Sidebar({ open, setOpen, role }) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isActive = (path) => location.pathname === path;
+    const [openMenu, setOpenMenu] = useState({ monitoring: true });
 
     const handleLogout = async () => {
         await signOut(auth);
     };
 
+    const handleNavigate = (path) => {
+        navigate(path);
+        if (window.innerWidth < 768) setOpen(false);
+    };
+
     return (
-        <div className="flex">
-            {/* Sidebar */}
+        <>
+            {/* Backdrop mobile */}
+            {open && (
+                <div
+                    className="fixed inset-0 bg-black/30 z-[55] md:hidden"
+                    onClick={() => setOpen(false)}
+                />
+            )}
+
             <div
-                className={`h-screen bg-gradient-to-b from-indigo-600 to-purple-600 text-white transition-all duration-300 ${open ? "w-64" : "w-20"}`}
+                className={`
+                    fixed md:static top-0 left-0 z-[60]
+                    h-screen flex-shrink-0
+                    bg-gradient-to-b from-indigo-600 to-purple-600 text-white
+                    transition-all duration-300
+                    ${open
+                    ? "translate-x-0 w-64"
+                    : "-translate-x-full md:translate-x-0 w-64 md:w-20"
+                }
+                `}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4">
                     {open && <h1 className="text-lg font-bold">e-ASI Care</h1>}
-                    <button onClick={() => setOpen(!open)}>
+                    <button onClick={() => setOpen(!open)} className="p-1 hover:bg-white/10 rounded-lg">
                         <Menu />
                     </button>
                 </div>
 
-                {/* Menu */}
                 <nav className="mt-6 space-y-2">
+                    {/* Dashboard */}
                     <SidebarItem
-                      icon={<LayoutDashboard />}
-                      label="Dashboard"
-                      open={open}
-                      active={page === "dashboard"}
-                      onClick={() => setPage("dashboard")}
-                    />
-                    <div>
-                      <SidebarItem
-                        icon={<Database />}
-                        label={`Monitoring ${openMenu.monitoring ? "▾" : "▸"}`}
+                        icon={<LayoutDashboard />}
+                        label="Dashboard"
                         open={open}
-                        active={["akg","menyusui","asi"].includes(page)}
-                        onClick={() =>
-                          setOpenMenu((prev) => ({
-                            ...prev,
-                            monitoring: !prev.monitoring,
-                          }))
-                        }
-                      />
+                        // ✅ FIX: "admin" → "superadmin"
+                        active={isActive(role === "superadmin" ? "/admin/dashboard" : "/user/home")}
+                        onClick={() => handleNavigate(role === "superadmin" ? "/admin/dashboard" : "/user/home")}
+                    />
 
-                      {open && openMenu.monitoring && (
-                        <div className="ml-10 mt-1 space-y-1">
-                          <SidebarItem
-                            label="Data AKG"
-                            open={open}
-                            active={page === "akg"}
-                            onClick={() => setPage("akg")}
-                          />
-                          <SidebarItem
-                            label="Perilaku Menyusui"
-                            open={open}
-                            active={page === "menyusui"}
-                            onClick={() => setPage("menyusui")}
-                          />
-                          <SidebarItem
-                            label="Kelancaran ASI"
-                            open={open}
-                            active={page === "asi"}
-                            onClick={() => setPage("asi")}
-                          />
+                    {/* Monitoring - superadmin only */}
+                    {/* ✅ FIX: "admin" → "superadmin" */}
+                    {role === "superadmin" && (
+                        <div>
+                            <SidebarItem
+                                icon={<Database />}
+                                label={`Monitoring ${openMenu.monitoring ? "▾" : "▸"}`}
+                                open={open}
+                                active={[
+                                    "/admin/monitoring/gizi",
+                                    "/admin/monitoring/menyusui",
+                                    "/admin/monitoring/asi"
+                                ].includes(location.pathname)}
+                                onClick={() =>
+                                    setOpenMenu((prev) => ({ ...prev, monitoring: !prev.monitoring }))
+                                }
+                            />
+                            {open && openMenu.monitoring && (
+                                <div className="ml-10 mt-1 space-y-1">
+                                    <SidebarItem label="Data AKG" open={open} active={isActive("/admin/monitoring/gizi")} onClick={() => handleNavigate("/admin/monitoring/gizi")} />
+                                    <SidebarItem label="Perilaku Menyusui" open={open} active={isActive("/admin/monitoring/menyusui")} onClick={() => handleNavigate("/admin/monitoring/menyusui")} />
+                                    <SidebarItem label="Kelancaran ASI" open={open} active={isActive("/admin/monitoring/asi")} onClick={() => handleNavigate("/admin/monitoring/asi")} />
+                                </div>
+                            )}
                         </div>
-                      )}
-                    </div>
+                    )}
 
+                    {/* Edukasi */}
                     <SidebarItem
-                      icon={<Newspaper />}
-                      label="Edukasi"
-                      open={open}
-                      active={page === "edukasi"}
-                      onClick={() => setPage("edukasi")}
+                        icon={<Newspaper />}
+                        label="Edukasi"
+                        open={open}
+                        // ✅ FIX: "admin" → "superadmin"
+                        active={isActive(role === "superadmin" ? "/admin/edukasi" : "/user/edukasi")}
+                        onClick={() => handleNavigate(role === "superadmin" ? "/admin/edukasi" : "/user/edukasi")}
                     />
 
-                    <SidebarItem
-                      icon={<Users />}
-                      label="Pengguna"
-                      open={open}
-                      active={page === "users"}
-                      onClick={() => setPage("users")}
-                    />
+                    {/* Gallery - user only */}
+                    {role === "user" && (
+                        <SidebarItem icon={<Image />} label="Gallery" open={open} active={isActive("/user/gallery")} onClick={() => handleNavigate("/user/gallery")} />
+                    )}
 
-                    <SidebarItem
-                      icon={<UserCheck2 />}
-                      label="Admin"
-                      open={open}
-                      active={page === "admins"}
-                      onClick={() => setPage("admins")}
-                    />
+                    {/* Chat - user only */}
+                    {role === "user" && (
+                        <SidebarItem icon={<MessageCircle />} label="Chat" open={open} active={isActive("/user/chat")} onClick={() => handleNavigate("/user/chat")} />
+                    )}
 
+                    {/* Pengguna & Admin - superadmin only (sudah benar) */}
+                    {role === "superadmin" && (
+                        <SidebarItem icon={<Users />} label="Pengguna" open={open} active={isActive("/admin/users")} onClick={() => handleNavigate("/admin/users")} />
+                    )}
+                    {role === "superadmin" && (
+                        <SidebarItem icon={<UserCheck2 />} label="Admin" open={open} active={isActive("/admin/admins")} onClick={() => handleNavigate("/admin/admins")} />
+                    )}
+
+                    {/* Profil - user only */}
+                    {role === "user" && (
+                        <SidebarItem icon={<Users />} label="Profil" open={open} active={isActive("/user/profile")} onClick={() => handleNavigate("/user/profile")} />
+                    )}
                 </nav>
 
                 {/* Bottom */}
-                <div className="absolute bottom-4 w-full">
+                <div className="absolute bottom-4 w-full space-y-2 px-2">
                     <SidebarItem icon={<Settings />} label="Settings" open={open} />
+                    <SidebarItem label="Logout" open={open} onClick={handleLogout} />
                 </div>
             </div>
-
-            {/* Main Content */}
-            <div className="flex-1 bg-gray-100 min-h-screen">
-                {/* Navbar */}
-                <div className="flex items-center justify-between bg-white px-6 py-3 shadow">
-                    {/* Search */}
-                    <div className="flex items-center bg-gray-100 px-3 py-2 rounded-lg w-1/3">
-                        <Search size={16} className="text-gray-500" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="bg-transparent outline-none ml-2 w-full"
-                        />
-                    </div>
-
-                    {/* Right Section */}
-                    <div className="flex items-center gap-4">
-                        <Bell className="cursor-pointer" />
-
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white">
-                                {user?.username?.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="text-sm">
-                                <p className="font-semibold">{user?.username}</p>
-                                <p className="text-gray-500 text-xs">{user?.role}</p>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleLogout}
-                            className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                        >
-                            <FontAwesomeIcon icon={faSignOutAlt} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Page Content */}
-                <div className="p-6">
-                  {page === "dashboard" && children}
-                  {page === "akg" && <AKGPage />}
-                  {page === "menyusui" && <PerilakuMenyusuiPage />}
-                  {page === "asi" && <KelancaranASIPage />}
-                  {page === "users" && <UserManagementPage />}
-                  {page === "admins" && <AdminPage />}
-                  {page === "edukasi" && <EdukasiPage />}
-                </div>
-            </div>
-        </div>
+        </>
     );
 }
 
@@ -188,8 +138,7 @@ function SidebarItem({ icon, label, open, active, onClick }) {
     return (
         <div
             onClick={onClick}
-            className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-xl cursor-pointer transition ${active ? "bg-white/20" : "hover:bg-white/10"
-                }`}
+            className={`flex items-center ${open ? "gap-3 px-4" : "justify-center"} py-3 mx-2 rounded-xl cursor-pointer transition ${active ? "bg-white/20" : "hover:bg-white/10"}`}
         >
             {icon && icon}
             {open && <span className="text-sm">{label}</span>}

@@ -1,19 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
-import { db } from "../services/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { useState, useEffect, useRef } from "react";
+import { getKelancaranASI } from "../monitoringService";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
-export default function PerilakuMenyusuiPage() {
+export default function Asi() {
     const [dataList, setDataList] = useState([]);
-    const [searchDate, setSearchDate] = useState("");
     const [selectedDate, setSelectedDate] = useState();
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-    const [filteredData, setFilteredData] = useState([]);
     const calendarRef = useRef(null);
+    const filteredData = selectedDate
+        ? dataList.filter(item => {
+            const formatted = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+            return item.tanggal === formatted;
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
+        })
+
+        : dataList;
+
+useEffect(() => {
+    const handleClickOutside = (event) => {
             if (calendarRef.current && !calendarRef.current.contains(event.target)) {
                 setIsCalendarOpen(false);
             }
@@ -25,37 +30,20 @@ export default function PerilakuMenyusuiPage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const querySnapshot = await getDocs(collection(db, "perilaku_menyusui"));
-            const data = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const data = await getKelancaranASI();
             setDataList(data);
-            setFilteredData(data);
         };
 
         fetchData();
     }, []);
 
-    useEffect(() => {
-        const formatted = selectedDate
-            ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`
-            : "";
-        if (!selectedDate) {
-            setFilteredData(dataList);
-        } else {
-            const filtered = dataList.filter(item => item.tanggal === formatted);
-            setFilteredData(filtered);
-        }
-    }, [selectedDate, dataList]);
-
     const formatTanggalIndo = (dateInput, withTime = false) => {
         const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
 
-        const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-        const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-        const tanggal = `${hari[date.getDay()]}, ${String(date.getDate()).padStart(2,"0")} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
+        const tanggal = `${hari[date.getDay()]}, ${String(date.getDate()).padStart(2, "0")} ${bulan[date.getMonth()]} ${date.getFullYear()}`;
 
         if (!withTime) return tanggal;
 
@@ -66,9 +54,9 @@ export default function PerilakuMenyusuiPage() {
     };
 
     return (
-        <div className="p-6">
+        <div className="w-full p-4 md:p-6">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-800">Perilaku Menyusui Ibu</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-gray-800">Kelancaran ASI</h1>
             </div>
 
             <div ref={calendarRef} className="mb-6 bg-white p-4 rounded-xl shadow relative">
@@ -76,7 +64,7 @@ export default function PerilakuMenyusuiPage() {
                     <label className="text-gray-600 font-medium">Filter Tanggal</label>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col md:flex-row gap-2">
                     <input
                         type="text"
                         readOnly
@@ -93,7 +81,6 @@ export default function PerilakuMenyusuiPage() {
                     <button
                         onClick={() => {
                             setSelectedDate(undefined);
-                            setSearchDate("");
                             setIsCalendarOpen(false);
                         }}
                         className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm"
@@ -117,7 +104,7 @@ export default function PerilakuMenyusuiPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow overflow-x-auto">
-                <table className="w-full text-sm caption-top md:caption-bottom">
+                <table className="min-w-[700px] w-full text-sm">
                     <thead>
                         <tr className="border-b bg-gray-50 text-gray-600 text-sm">
                             <th className="px-4 py-2 text-left">User</th>
@@ -141,29 +128,12 @@ export default function PerilakuMenyusuiPage() {
                                     <td className="px-4 py-2">{item.userId}</td>
                                     <td className="px-4 py-2">{item.skorTotal}</td>
 
-                                    <td className="px-4 py-2">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                                            ${item.kategori === "Baik" ? "bg-green-100 text-green-700" : ""}
-                                            ${item.kategori === "Cukup" ? "bg-yellow-100 text-yellow-700" : ""}
-                                            ${item.kategori === "Kurang" ? "bg-red-100 text-red-700" : ""}
-                                        `}>
-                                            {item.kategori}
-                                        </span>
-                                    </td>
-
-                                    <td className="px-4 py-2">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                                            ${item.status === "Baik" ? "bg-green-100 text-green-700" : ""}
-                                            ${item.status === "Perlu Perhatian" ? "bg-yellow-100 text-yellow-700" : ""}
-                                            ${item.status === "Risiko" ? "bg-red-100 text-red-700" : ""}
-                                        `}>
-                                            {item.status || "-"}
-                                        </span>
-                                    </td>
+                                    <td className="px-4 py-2">{item.kategori}</td>
+                                    <td className="px-4 py-2">{item.status || "-"}</td>
 
                                     <td className="px-4 py-2">
                                         {Array.isArray(item.rekomendasi) && item.rekomendasi.length > 0 ? (
-                                            <ul className="list-disc pl-4 text-sm text-gray-600">
+                                            <ul className="list-disc pl-4 text-sm text-gray-600 break-words">
                                                 {item.rekomendasi.map((r, idx) => (
                                                     <li key={idx}>{r}</li>
                                                 ))}

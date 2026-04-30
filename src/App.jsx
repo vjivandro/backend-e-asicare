@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Login from './auth/Login';
-import Dashboard from './pages/Dashboard';
+import AppRoutes from "./app/routes";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "./services/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -14,22 +14,24 @@ export default function App() {
       if (currentUser) {
         const uid = currentUser.uid;
 
-        // cek admin
-        const adminRef = doc(db, "admins", uid);
-        const adminSnap = await getDoc(adminRef);
+        // ambil data user dari collection users
+        let userRef = doc(db, "users", uid);
+        let userSnap = await getDoc(userRef);
 
-        if (adminSnap.exists()) {
-          // ambil data user (username dll)
-          const userRef = doc(db, "users", uid);
-          const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          userRef = doc(db, "admins", uid);
+          userSnap = await getDoc(userRef);
+        }
+
+        if (!userSnap.exists()) {
+          setUser(null);
+        } else {
+          const userData = userSnap.data();
 
           setUser({
             ...currentUser,
-            ...adminSnap.data(),
-            ...(userSnap.exists() ? userSnap.data() : {}),
+            ...userData,
           });
-        } else {
-          setUser(null);
         }
       } else {
         setUser(null);
@@ -46,9 +48,8 @@ export default function App() {
   }
 
   return user ? (
-    <Dashboard user={user} />
-
+      <AppRoutes user={user} setUser={setUser} />
   ) : (
-    <Login setUser={setUser} />
-  )
+      <AppRoutes user={null} setUser={setUser} />
+  );
 }

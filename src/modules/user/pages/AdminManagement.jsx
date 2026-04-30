@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { db } from "../services/firebase";
+import { db } from "../../../services/firebase.js";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 
-export default function AdminPage() {
+export default function AdminManagement() {
     const [users, setUsers] = useState([]);
 
     const fetchUsers = async () => {
@@ -31,21 +31,21 @@ export default function AdminPage() {
             <div className="bg-white p-4 rounded shadow">
                 <table className="w-full text-sm border">
                     <thead>
-                        <tr className="border-b bg-gray-100">
-                            <th className="px-4 py-2 text-left">Email</th>
-                            <th className="px-4 py-2 text-left">Username</th>
-                            <th className="px-4 py-2 text-left">Role</th>
-                        </tr>
+                    <tr className="border-b bg-gray-100">
+                        <th className="px-4 py-2 text-left">Email</th>
+                        <th className="px-4 py-2 text-left">Username</th>
+                        <th className="px-4 py-2 text-left">Role</th>
+                    </tr>
                     </thead>
 
                     <tbody>
-                        {users.map((user) => (
-                            <tr key={user.id} className="border-b">
-                                <td className="px-4 py-2">{user.email || "-"}</td>
-                                <td className="px-4 py-2">{user.username || "-"}</td>
-                                <td className="px-4 py-2">{user.role || "user"}</td>
-                            </tr>
-                        ))}
+                    {users.map((user) => (
+                        <tr key={user.id} className="border-b">
+                            <td className="px-4 py-2">{user.email || "-"}</td>
+                            <td className="px-4 py-2">{user.username || "-"}</td>
+                            <td className="px-4 py-2">{user.role || "user"}</td>
+                        </tr>
+                    ))}
                     </tbody>
                 </table>
             </div>

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { db } from "../services/firebase";
+import { db } from "../../../services/firebase.js";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt, faKey, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-export default function UserManagementPage() {
+export default function UserManagement() {
     const [users, setUsers] = useState([]);
     const auth = getAuth();
 

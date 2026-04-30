@@ -1,25 +1,17 @@
 import { useEffect, useState } from "react";
-import Modal from "../components/Modal";
-import { db } from "../services/firebase";
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from "firebase/firestore";
+import Modal from "../../../components/Modal";
+import { getAKG } from "../monitoringService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAdd, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-export default function AKGPage() {
+export default function Gizi() {
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
   const [editData, setEditData] = useState(null);
 
   const fetchData = async () => {
     try {
-      const q = query(collection(db, "akg_ibu"), orderBy("usia_min", "asc"));
-      const snapshot = await getDocs(q);
-
-      const result = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
+      const result = await getAKG();
       setData(result);
     } catch (err) {
       alert(err.message);
@@ -55,9 +47,8 @@ export default function AKGPage() {
         </button>
       </div>
 
-      {/* Table akg */}
       <div className="bg-white p-4 rounded shadow overflow-x-auto">
-        <table className="w-full text-sm caption-top md:caption-bottom">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-gray-100">
               <th className="px-4 py-2 text-left">Usia</th>
@@ -85,14 +76,13 @@ export default function AKGPage() {
                     onClick={() => setEditData(item)}
                     className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded"
                   >
-                    <FontAwesomeIcon icon={faPencilAlt} >Edit</FontAwesomeIcon>
+                    <FontAwesomeIcon icon={faPencilAlt} />
                   </button>
                   <button
                     onClick={() => handleDelete(item.id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
                   >
-
-                    <FontAwesomeIcon icon={faTrash} >Hapus</FontAwesomeIcon>
+                    <FontAwesomeIcon icon={faTrash} />
                   </button>
                 </td>
               </tr>
@@ -114,10 +104,3 @@ export default function AKGPage() {
     </div>
   );
 }
-
-const SidebarItem = ({ icon, label, open, active }) => (
-  <div className={`flex items-center gap-4 p-3 cursor-pointer ${active ? "bg-white text-indigo-600" : "text-white hover:bg-white hover:text-indigo-600 rounded"}`}>
-    {icon}
-    {open && <span>{label}</span>}
-  </div>
-);
