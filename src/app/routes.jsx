@@ -25,6 +25,8 @@ import KelancaranAsi from "../modules/user/monitoring/KelancaranAsi.jsx";
 import KuesionerPengetahuan from "../modules/user/monitoring/pengetahuan/KuesionerPengetahuan.jsx";import Sikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
 import Profile from "../modules/user/profile/Profile.jsx";
 import KuesionerSikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
+import MonitoringKuesioner from "../modules/admin/monitoring/MonitoringKuesioner.jsx";
+import HalamanNotifikasi from "../modules/user/profile/HalamanNotifikasi.jsx";
 
 function AdminRoute({ user }) {
     if (!user) return <Navigate to="/login" replace />;
@@ -74,6 +76,7 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="monitoring/kesehatan-nifas" element={<AdminKesehatanNifas />} />
                     <Route path="monitoring/menyusui" element={<AdminMenyusui />} />
                     <Route path="monitoring/kelancaran-asi" element={<AdminAsi />} />
+                    <Route path="monitoring/kuesioner" element={<MonitoringKuesioner />} />
                     <Route path="users" element={<UserManagement />} />
                     <Route path="admins" element={<AdminManagement />} />
                 </Route>
@@ -94,6 +97,7 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="gallery" element={<Gallery />} />
                     <Route path="chat-asisten" element={<ChatAsisten />} />
                     <Route path="profile" element={<Profile />} />
+                    <Route path="notifikasi" element={<HalamanNotifikasi />} />
                 </Route>
             </Route>
 

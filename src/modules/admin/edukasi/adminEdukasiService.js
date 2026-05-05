@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import {collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp} from "firebase/firestore";
 import { db } from "../../../services/firebase.js";
 
 const col = collection(db, "edukasi");
@@ -31,3 +31,25 @@ export const updateEdukasi = async (id, data) => {
 export const deleteEdukasi = async (id) => {
     return await deleteDoc(doc(db, "edukasi", id));
 };
+
+export const addEdukasi = async (dataEdukasi) => {
+    try {
+        const docRef = await addDoc(collection(db, "edukasi"), dataEdukasi);
+
+        await addDoc(collection(db, "notifications"), {
+            title: "Materi Edukasi Baru! 📚",
+            body: `Admin baru saja memperbarui materi edukasi. Yuk pelajari sekarang untuk mendukung ASI eksklusif Bunda!`,
+            type: "edukasi",
+            target: "all",
+            readBy: [],
+            createdAt: serverTimestamp(),
+            link: "/user/edukasi"
+        });
+
+        return docRef;
+    } catch (error) {
+        console.error("Error adding document: ", error);
+        throw error;
+    }
+};
+

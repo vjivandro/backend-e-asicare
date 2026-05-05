@@ -15,7 +15,7 @@ import {
     HeartPulse,
     Baby,
     Droplets,
-    Activity, CircleUserRound, BookOpen, Heart
+    Activity, CircleUserRound, BookOpen, Heart, ListTodo
 } from "lucide-react";
 import {signOut} from "firebase/auth";
 import {auth} from "../services/firebase";
@@ -228,6 +228,14 @@ export default function Sidebar({open, setOpen, role}) {
                         open={open}
                         active={isActive("/admin/monitoring/kelancaran-asi")}
                         onClick={() => handleNavigate("/admin/monitoring/kelancaran-asi")}
+                    />
+
+                    <SidebarItem
+                        icon={<ListTodo size={20}/>}
+                        label="Kuesioner"
+                        open={open}
+                        active={isActive("/admin/monitoring/kuesioner")}
+                        onClick={() => handleNavigate("/admin/monitoring/kuesioner")}
                     />
 
                     <div className="pt-4 pb-2">
