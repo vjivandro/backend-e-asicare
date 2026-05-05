@@ -1,18 +1,20 @@
 import { useEffect, useState, useMemo } from "react";
 import { getEdukasi } from "../../admin/edukasi/adminEdukasiService.js";
-import { Search, Calendar, Tag, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+    Search, Calendar, ChevronLeft, ChevronRight, X,
+    Video, Image as ImageIcon, FileText, Link, Download
+} from "lucide-react";
 
 export default function UserEdukasi() {
     const [data, setData] = useState([]);
     const [selectedArticle, setSelectedArticle] = useState(null);
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterCategory, setFilterCategory] = useState(""); // Menggunakan string kosong untuk "Semua"
+    const [filterCategory, setFilterCategory] = useState("");
     const [sortOrder, setSortOrder] = useState("terbaru");
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
 
-    // Kategori mapping untuk tombol pill
     const categories = [
         { id: "", label: "Semua" },
         { id: "11", label: "Gizi Seimbang" },
@@ -32,7 +34,7 @@ export default function UserEdukasi() {
         loadData();
     }, []);
 
-    // Helper untuk mengambil ID YouTube yang akurat
+    // 🔥 Helper: Deteksi YouTube
     const getYouTubeId = (url) => {
         if (!url) return null;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -40,12 +42,40 @@ export default function UserEdukasi() {
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
-    const renderThumbnail = (media) => {
-        if (!media) return "https://placehold.co/600x400/EEE/31343C";
-        const videoId = getYouTubeId(media);
-        if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        if (media.includes("mp4")) return "https://placehold.co/600x400/EEE/31343C";
-        return media;
+    // 🔥 Helper: Deteksi Jenis Media
+    const getMediaType = (url) => {
+        if (!url) return "none";
+        const cleanUrl = url.split('?')[0].toLowerCase();
+
+        if (getYouTubeId(url)) return "youtube";
+        if (cleanUrl.match(/\.(mp4|webm|ogg)$/)) return "video";
+        if (cleanUrl.match(/\.(pdf)$/)) return "pdf";
+        if (cleanUrl.match(/\.(doc|docx)$/)) return "word";
+        if (cleanUrl.match(/\.(jpeg|jpg|gif|png|webp|svg)$/)) return "image";
+
+        return "document"; // Jika tidak dikenali, masuk ke kategori dokumen/link
+    };
+
+    // Render Thumbnail yang Aman
+    const renderThumbnail = (media, type) => {
+        if (!media || type === "pdf" || type === "word" || type === "document") {
+            return "https://placehold.co/600x400/FDF2F8/D81B60?text=Dokumen+Edukasi";
+        }
+        if (type === "youtube") return `https://img.youtube.com/vi/${getYouTubeId(media)}/hqdefault.jpg`;
+        if (type === "video") return "https://placehold.co/600x400/FDF2F8/D81B60?text=Video+Edukasi";
+        return media; // Berarti ini gambar biasa
+    };
+
+    // 🔥 Helper: Render Icon Media
+    const renderMediaIcon = (type) => {
+        switch(type) {
+            case 'youtube':
+            case 'video': return <><Video size={10} /> Video</>;
+            case 'pdf': return <><FileText size={10} /> PDF</>;
+            case 'word': return <><FileText size={10} /> Word</>;
+            case 'image': return <><ImageIcon size={10} /> Gambar</>;
+            default: return <><Link size={10} /> Link</>;
+        }
     };
 
     const processedData = useMemo(() => {
@@ -76,7 +106,6 @@ export default function UserEdukasi() {
 
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
-
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
@@ -84,7 +113,6 @@ export default function UserEdukasi() {
                     <p className="text-gray-500 mt-1">Temukan artikel dan panduan seputar kesehatan ibu dan bayi.</p>
                 </div>
 
-                {/* Search Bar Minimalis */}
                 <div className="relative w-full md:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
@@ -100,7 +128,7 @@ export default function UserEdukasi() {
                 </div>
             </div>
 
-            {/* 🔥 Filter Pill Section 🔥 */}
+            {/* Filter Pill Section */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/50 p-2 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto no-scrollbar">
                     {categories.map((cat) => (
@@ -133,45 +161,58 @@ export default function UserEdukasi() {
                 </div>
             </div>
 
-            {/* Grid Edukasi (Tampilan Card 5 Kolom) */}
+            {/* Grid Edukasi */}
             {paginatedData.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {paginatedData.map((item) => (
-                        <div
-                            key={item.id}
-                            onClick={() => setSelectedArticle(item)}
-                            className="group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer flex flex-col h-full"
-                        >
-                            <div className="relative aspect-[4/3] w-full mb-4 overflow-hidden rounded-[1.5rem]">
-                                <img
-                                    src={renderThumbnail(item.media)}
-                                    alt={item.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
-                                <div className="absolute top-3 left-3">
+                    {paginatedData.map((item) => {
+                        const mediaType = getMediaType(item.media); // Deteksi tipe
+
+                        return (
+                            <div
+                                key={item.id}
+                                onClick={() => setSelectedArticle(item)}
+                                className="group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer flex flex-col h-full"
+                            >
+                                <div className="relative aspect-[4/3] w-full mb-4 overflow-hidden rounded-[1.5rem] bg-pink-50">
+                                    <img
+                                        src={renderThumbnail(item.media, mediaType)}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+
+                                    {/* Badge Kategori (Kiri Atas) */}
+                                    <div className="absolute top-3 left-3">
                                     <span className="px-2.5 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[9px] font-black text-pink-500 uppercase tracking-tighter shadow-sm">
                                         {categories.find(c => c.id === String(item.kategori))?.label || "Umum"}
                                     </span>
-                                </div>
-                            </div>
-
-                            <div className="px-1 flex flex-col flex-grow">
-                                <h3 className="font-bold text-sm leading-snug text-gray-900 group-hover:text-pink-500 transition-colors line-clamp-2 mb-2">
-                                    {item.title}
-                                </h3>
-                                <p className="text-[11px] text-gray-500 line-clamp-2 mb-4 leading-relaxed flex-grow">
-                                    {item.content}
-                                </p>
-                                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50 text-[10px] font-bold text-gray-400">
-                                    <div className="flex items-center gap-1">
-                                        <Calendar size={12} />
-                                        {item.date ? new Date(item.date.seconds * 1000).toLocaleDateString('id-ID') : "-"}
                                     </div>
-                                    <span className="text-pink-500">BACA &rarr;</span>
+
+                                    {mediaType !== 'none' && (
+                                        <div className="absolute top-3 right-3">
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-lg text-[9px] font-bold text-white uppercase shadow-sm">
+                                                {renderMediaIcon(mediaType)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="px-1 flex flex-col flex-grow">
+                                    <h3 className="font-bold text-sm leading-snug text-gray-900 group-hover:text-pink-500 transition-colors line-clamp-2 mb-2">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-[11px] text-gray-500 line-clamp-2 mb-4 leading-relaxed flex-grow">
+                                        {item.content}
+                                    </p>
+                                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-50 text-[10px] font-bold text-gray-400">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar size={12} />
+                                            {item.date ? new Date(item.date.seconds * 1000).toLocaleDateString('id-ID') : "-"}
+                                        </div>
+                                        <span className="text-pink-500">BACA &rarr;</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        )})}
                 </div>
             ) : (
                 <div className="py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
@@ -225,21 +266,63 @@ export default function UserEdukasi() {
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="p-6 md:p-10 overflow-y-auto">
+                        <div className="p-6 md:p-10 overflow-y-auto custom-scrollbar">
                             <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">{selectedArticle.title}</h2>
                             <div className="flex items-center gap-2 text-xs font-bold text-pink-400 mb-8 uppercase tracking-widest">
                                 <Calendar size={14} />
                                 {selectedArticle.date ? new Date(selectedArticle.date.seconds * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
                             </div>
-                            {selectedArticle.media && (
-                                <div className="mb-8 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100">
-                                    {getYouTubeId(selectedArticle.media) ? (
-                                        <iframe className="w-full aspect-video" src={`https://www.youtube.com/embed/${getYouTubeId(selectedArticle.media)}`} title="YouTube" allowFullScreen />
-                                    ) : (
-                                        <img src={selectedArticle.media} alt="Cover" className="w-full h-auto" />
-                                    )}
-                                </div>
-                            )}
+
+                            {/* 🔥 Penanganan Media Dinamis dalam Modal 🔥 */}
+                            {selectedArticle.media && (() => {
+                                const mType = getMediaType(selectedArticle.media);
+
+                                if (mType === 'youtube') {
+                                    return (
+                                        <div className="mb-8 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 bg-black">
+                                            <iframe className="w-full aspect-video" src={`https://www.youtube.com/embed/${getYouTubeId(selectedArticle.media)}`} title="YouTube video" allowFullScreen />
+                                        </div>
+                                    );
+                                } else if (mType === 'video') {
+                                    return (
+                                        <div className="mb-8 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 bg-black">
+                                            <video className="w-full max-h-[400px] object-contain" controls src={selectedArticle.media} />
+                                        </div>
+                                    );
+                                } else if (mType === 'image') {
+                                    return (
+                                        <div className="mb-8 rounded-[2rem] overflow-hidden shadow-sm border border-gray-100">
+                                            <img src={selectedArticle.media} alt="Cover" className="w-full h-auto max-h-[400px] object-cover" />
+                                        </div>
+                                    );
+                                } else {
+                                    // TAMPILAN KHUSUS UNTUK DOKUMEN PDF/WORD (USER SIDE)
+                                    return (
+                                        <div className="mb-8">
+                                            <a
+                                                href={selectedArticle.media}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-between p-6 bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-100 rounded-3xl hover:shadow-md transition-all group"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#D81B60] shadow-sm group-hover:scale-110 transition-transform">
+                                                        <FileText size={28} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-800 text-lg">Lampiran Dokumen</h4>
+                                                        <p className="text-sm text-gray-500">Klik untuk mengunduh atau membaca file</p>
+                                                    </div>
+                                                </div>
+                                                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#D81B60] shadow-sm">
+                                                    <Download size={20} />
+                                                </div>
+                                            </a>
+                                        </div>
+                                    );
+                                }
+                            })()}
+
                             <div className="prose prose-pink max-w-none text-gray-700 whitespace-pre-line text-lg leading-relaxed">
                                 {selectedArticle.content}
                             </div>
