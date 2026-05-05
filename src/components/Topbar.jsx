@@ -1,62 +1,54 @@
-import { Menu, Bell, Search } from "lucide-react";
-import { signOut } from "firebase/auth";
+import { Menu, Bell } from "lucide-react";
 import { auth } from "../services/firebase";
-import { useNavigate } from "react-router-dom";
 
 export default function Topbar({ user, onMenuClick }) {
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        await signOut(auth);
-        navigate("/login");
-    };
+    // Mengambil foto profil dari Google OAuth2 jika tersedia
+    const photoURL = user?.photoURL || auth.currentUser?.photoURL;
 
     return (
         <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 shadow">
 
-            {/* LEFT */}
-            <div className="flex items-center gap-3 w-full md:w-1/2">
-
-                {/* 🔥 Toggle Sidebar (mobile) */}
-                <button onClick={onMenuClick} className="md:hidden p-2">
+            {/* LEFT - Tombol Menu untuk Mobile */}
+            <div className="flex items-center gap-3">
+                <button onClick={onMenuClick} className="md:hidden p-2 text-gray-600">
                     <Menu />
                 </button>
-
-                {/* 🔍 Search */}
-                <div className="flex items-center bg-gray-100 px-3 py-2 rounded-lg w-full">
-                    <Search size={16} className="text-gray-500" />
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        className="bg-transparent outline-none ml-2 w-full text-sm"
-                    />
-                </div>
             </div>
 
-            {/* RIGHT */}
-            <div className="flex items-center gap-4">
+            {/* RIGHT - Identitas Pengguna */}
+            <div className="flex items-center gap-5">
 
-                {/* 🔔 Notification */}
-                <Bell className="cursor-pointer" />
+                {/* Notifikasi */}
+                <Bell className="cursor-pointer text-gray-500 hover:text-pink-500 transition-colors" />
 
-                {/* 👤 User Info */}
-                <div className="hidden md:flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white">
-                        {(user?.username || user?.email)?.charAt(0)?.toUpperCase() || "U"}
+                <div className="flex items-center gap-3 border-l pl-5 border-gray-100">
+                    {/* Nama dan Role (Dinamis untuk User/Admin) */}
+                    <div className="text-right hidden sm:block">
+                        <p className="font-bold text-gray-800 leading-none mb-1 capitalize">
+                            {user?.username ? user.username : user?.email?.split('@')[0] || "User"}
+                        </p>
+                        <p className="text-[#EE6B9E] font-medium text-[10px] uppercase tracking-wider">
+                            {user?.role || "Guest"}
+                        </p>
                     </div>
-                    <div className="text-sm">
-                        <p className="font-semibold">{user?.username || user?.email}</p>
-                        <p className="text-gray-500 text-xs">{user?.role}</p>
+
+                    {/* Foto Profil Dinamis[cite: 2] */}
+                    <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
+                        {photoURL ? (
+                            <img
+                                src={photoURL}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer" // Memastikan foto Google muncul[cite: 2]
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-tr from-[#4B3B88] to-purple-500 flex items-center justify-center text-white font-bold">
+                                {/* Inisial Nama sebagai Fallback[cite: 2] */}
+                                {(user?.username || user?.email)?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {/* 🚪 Logout */}
-                <button
-                    onClick={handleLogout}
-                    className="text-sm bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                >
-                    Logout
-                </button>
             </div>
         </div>
     );

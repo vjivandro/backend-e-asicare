@@ -2,200 +2,128 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "../services/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {doc, updateDoc, serverTimestamp, getDoc} from "firebase/firestore";
+import frontLogo from "../assets/front-logo.png";
 
 export default function Login({ setUser }) {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    const navigate = useNavigate();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const googleProvider = new GoogleAuthProvider();
 
-  const googleProvider = new GoogleAuthProvider();
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+            // 1. Proses login bawaan Firebase (contoh pakai email/password)
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-  const handleLogin = async () => {
-    try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const uid = res.user.uid;
-     console.log("UID dari login:", uid);
-
-      // ambil data user dari collection users
-        // cek di users dulu
-        let userRef = doc(db, "users", uid);
-        let userSnap = await getDoc(userRef);
-
-        // kalau tidak ada di users → cek admins
-        if (!userSnap.exists()) {
-            userRef = doc(db, "admins", uid);
-            userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                alert("User tidak ditemukan");
-                return;
-            }
-        }
-
-
-      const userData = userSnap.data();
-
-      // validasi role
-      if (!userData.role) {
-        alert("Role user tidak ditemukan di database");
-        return;
-      }
-
-      // set user + role
-      setUser({
-        ...res.user,
-        ...userData,
-      });
-
-      // redirect berdasarkan role
-      if (userData.role === "superadmin") {
-        navigate("/admin/dashboard");
-      } else if (userData.role === "user") {
-        navigate("/user/home");
-      } else {
-        alert("Role tidak dikenali");
-      }
-
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const res = await signInWithPopup(auth, googleProvider);
-      const uid = res.user.uid;
-
-        const adminSnap = await getDoc(doc(db, "admins", uid));
-        if (adminSnap.exists()) {
-            const adminData = adminSnap.data();
-            setUser({ ...res.user, ...adminData });
-            navigate("/admin/dashboard");
-            return;
-        }
-
-        let userSnap = await getDoc(doc(db, "users", uid));
-
-        if (!userSnap.exists()) {
-            await setDoc(doc(db, "users", uid), {
-                uid: uid,
-                email: res.user.email,
-                username: res.user.displayName || "User",
-                role: "user",
-                photoURL: res.user.photoURL || null,
-                createdAt: new Date(),
-                provider: "google",
+            // 2. [INI TRIGGER-NYA] Update waktu terakhir login ke Firestore
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, {
+                // Gunakan serverTimestamp agar waktunya akurat sesuai server Google, bukan jam HP user
+                lastLogin: serverTimestamp()
             });
 
-            // Ambil ulang setelah dibuat
-            userSnap = await getDoc(doc(db, "users", uid));
+            // 3. Lanjut redirect ke halaman Home / Dashboard
+            // navigate('/user/home');
+
+        } catch (error) {
+            console.error("Gagal login:", error);
         }
+    };
 
-        const userData = userSnap.data();
-        setUser({ ...res.user, ...userData });
-        navigate("/user/home");
+    const handleGoogleLogin = async () => {
+        try {
+            const res = await signInWithPopup(auth, googleProvider);
+            const uid = res.user.uid;
+            let userSnap = await getDoc(doc(db, "users", uid));
+            const userData = userSnap.data();
+            setUser({ ...res.user, ...userData });
+            navigate("/user/home");
+        } catch (err) { alert(err.message); }
+    };
 
-      if (userData.role === "superadmin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/user/home");
-      }
+    return (
+        <div className="min-h-screen flex bg-white font-sans">
+            {/* LEFT SIDE - Ilustrasi Gaya Zoho */}
+            <div className="hidden lg:flex w-1/2 bg-[#F8F9FB] flex-col justify-center items-center px-20 relative">
+                <div className="absolute top-12 left-12">
+                    <h1 className="text-2xl font-black text-[#D81B60] tracking-tighter">e-ASI Care.</h1>
+                </div>
+                <div className="max-w-md text-center lg:text-left">
+                    <h2 className="text-4xl font-black text-gray-900 mb-4 leading-tight">Selamat Datang 👋</h2>
+                    <p className="text-gray-500 text-lg mb-12">Pantau gizi dan tumbuh kembang buah hati dengan penuh
+                        cinta setiap hari.</p>
+                    {/* Area Ilustrasi (Bisa diganti image_73a9e2.png) */}
+                    <img
+                        src={frontLogo}
+                        alt="Ilustrasi e-ASI Care"
+                        className="w-full max-w-sm mix-blend-multiply"
+                    />
+                </div>
+            </div>
 
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+            {/* RIGHT SIDE - Form Login */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+                <div className="w-full max-w-md">
+                    <div className="mb-10">
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-2">Start for free</p>
+                        <h3 className="text-3xl font-black text-gray-900 mb-2">Masuk ke e-ASI Care.</h3>
+                        <p className="text-sm text-gray-500">Belum punya akun? <button onClick={() => navigate("/register")} className="text-[#D81B60] font-bold hover:underline">Daftar sekarang</button></p>
+                    </div>
 
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* LEFT SIDE */}
-      <div className="hidden md:flex w-1/2 bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex-col justify-center px-12">
-        <h1 className="text-4xl font-bold mb-4">e-ASI Care</h1>
-        <h2 className="text-3xl font-semibold mb-2">Selamat Datang 👋</h2>
-        <p className="text-sm opacity-90 mb-6">
-          Dashboard Admin untuk mengelola data AKG ibu menyusui dengan mudah.
-        </p>
-        <p className="text-xs opacity-75">
-          Kelola data gizi, pengguna, dan sistem dengan efisien.
-        </p>
-      </div>
+                    <div className="space-y-6">
+                        <div>
+                            <label className="text-[12px] font-bold text-gray-700 block mb-2">Email</label>
+                            <input
+                                type="email"
+                                placeholder="nama@email.com"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF85B3] focus:ring-4 focus:ring-pink-50 outline-none transition-all"
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex w-full md:w-1/2 items-center justify-center bg-gray-100 p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 w-full max-w-sm">
-          <h2 className="text-2xl font-bold text-center mb-2">Hello! Welcome back</h2>
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <label className="text-[12px] font-bold text-gray-700">Password</label>
+                                <button className="text-[11px] font-bold text-[#D81B60] hover:underline">Lupa Password?</button>
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="Minimal 8 karakter"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF85B3] focus:ring-4 focus:ring-pink-50 outline-none transition-all"
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
 
-          <div className="mb-4">
-            <label className="text-sm text-gray-600">Email</label>
-            <input
-              placeholder="Enter your email address"
-              className="border rounded-lg p-2 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+                        <button
+                            onClick={handleLogin}
+                            className="w-full bg-gradient-to-r from-[#D81B60] to-[#FF6B9E] text-white py-4 rounded-xl font-black text-sm shadow-lg shadow-pink-100 hover:scale-[1.02] active:scale-95 transition-all"
+                        >
+                            Masuk Sekarang
+                        </button>
 
-          <div className="mb-2">
-            <label className="text-sm text-gray-600">Password</label>
-            <input
-              type="password"
-              placeholder="********"
-              className="border rounded-lg p-2 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+                        <div className="relative py-4">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                            <div className="relative flex justify-center text-[10px] uppercase font-black text-gray-300 tracking-widest"><span className="bg-white px-4">Atau</span></div>
+                        </div>
 
-          <div className="flex justify-between items-center text-sm mb-4">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" />
-              Remember me
-            </label>
-            <span className="text-indigo-500 cursor-pointer hover:underline">
-              Reset Password?
-            </span>
-          </div>
+                        <button
+                            onClick={handleGoogleLogin}
+                            className="w-full flex items-center justify-center gap-3 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all font-bold text-gray-600 text-sm"
+                        >
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" />
+                            Masuk dengan Google
+                        </button>
+                    </div>
 
-          <button
-            onClick={handleLogin}
-            className="bg-indigo-600 hover:bg-indigo-700 transition text-white w-full py-2 rounded-lg font-semibold"
-          >
-            Login
-          </button>
-
-          <div className="flex items-center my-4">
-            <div className="flex-1 h-px bg-gray-300"></div>
-            <span className="px-2 text-sm text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-300"></div>
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={handleGoogleLogin}
-              className="bg-white border p-2 rounded-lg shadow hover:bg-gray-100"
-            >
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" />
-            </button>
-
-            {/*<button className="bg-white border p-2 rounded-lg shadow opacity-50 cursor-not-allowed">*/}
-            {/*  <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="w-5 h-5" />*/}
-            {/*</button>*/}
-
-            {/*<button className="bg-white border p-2 rounded-lg shadow opacity-50 cursor-not-allowed">*/}
-            {/*  <img src="https://www.svgrepo.com/show/475654/apple-color.svg" className="w-5 h-5" />*/}
-            {/*</button>*/}
-          </div>
-
-          <p className="text-sm text-center mt-4">
-            Don't have an account?
-            <button
-              onClick={() => navigate("/register")}
-              className="text-indigo-600 font-semibold hover:underline ml-1"
-            >
-              Create Account
-            </button>
-          </p>
+                    <p className="mt-12 text-[10px] text-gray-400 text-center leading-relaxed">
+                        Situs ini dilindungi oleh reCAPTCHA dan kebijakan privasi <br/>
+                        <span className="font-bold underline cursor-pointer">Syarat & Ketentuan</span> berlaku.
+                    </p>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

@@ -1,16 +1,30 @@
 import { Navigate, Routes, Route, Outlet } from "react-router-dom"
 import AdminLayout from "../layouts/AdminLayout"
-import AdminEdukasi from "../modules/edukasi/pages/AdminEdukasi";
-import AdminDashboard from "../modules/user/pages/AdminDashboard";
-import Asi from "../modules/monitoring/pages/Asi.jsx";
-import Menyusui from "../modules/monitoring/pages/Menyusui.jsx";
-import Gizi from "../modules/monitoring/pages/Gizi.jsx";
-import UserManagement from "../modules/user/pages/UserManagement.jsx";
-import AdminManagement from "../modules/user/pages/AdminManagement.jsx";
+import AdminEdukasi from "../modules/admin/edukasi/AdminEdukasi.jsx";
+import AdminDashboard from "../modules/admin/dashboard/AdminDashboard.jsx";
+import AdminAsi from "../modules/admin/monitoring/AdminAsi.jsx";
+import AdminMenyusui from "../modules/admin/monitoring/AdminMenyusui.jsx";
+import AdminGizi from "../modules/admin/monitoring/AdminGizi.jsx";
+import UserManagement from "../modules/admin/user-management/UserManagement.jsx";
+import AdminManagement from "../modules/admin/user-management/AdminManagement.jsx";
 import UserLayout from "../layouts/UserLayout";
-import Home from "../modules/user/pages/Home.jsx";
+import Home from "../modules/user/home/Home.jsx";
+import UserEdukasi from "../modules/user/edukasi/UserEdukasi.jsx";
 import Login from "../auth/Login.jsx";
 import Register from "../auth/register.jsx";
+import TargetGizi from "../modules/user/monitoring/TargetGizi.jsx";
+import ChatAsisten from "../modules/user/chat/ChatAsisten.jsx";
+import Gallery from "../modules/user/gallery/Gallery.jsx";
+import AddMasterMakanan from "../modules/admin/monitoring/AddMasterMakanan.jsx";
+import MasterPangan from "../modules/admin/monitoring/MasterPangan.jsx";
+import FoodDiary from "../modules/user/monitoring/FoodDiary.jsx";
+import ChecklistKesehatan from "../modules/user/monitoring/ChecklistKesehatan.jsx";
+import AdminKesehatanNifas from "../modules/admin/monitoring/AdminKesehatanNifas.jsx";
+import Menyusui from "../modules/user/monitoring/Menyusui.jsx";
+import KelancaranAsi from "../modules/user/monitoring/KelancaranAsi.jsx";
+import KuesionerPengetahuan from "../modules/user/monitoring/pengetahuan/KuesionerPengetahuan.jsx";import Sikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
+import Profile from "../modules/user/profile/Profile.jsx";
+import KuesionerSikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
 
 function AdminRoute({ user }) {
     if (!user) return <Navigate to="/login" replace />;
@@ -44,35 +58,45 @@ export default function AppRoutes({ user, setUser }) {
                 }
             />
 
-            {/* ✅ Guest routes — tidak bisa diakses kalau sudah login */}
             <Route element={<GuestRoute user={user} />}>
                 <Route path="/login" element={<Login setUser={setUser} />} />
                 <Route path="/register" element={<Register />} />
             </Route>
 
-            {/* ✅ Admin routes — hanya superadmin */}
             <Route element={<AdminRoute user={user} />}>
                 <Route path="/admin" element={<AdminLayout user={user} />}>
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<AdminDashboard />} />
                     <Route path="edukasi" element={<AdminEdukasi />} />
-                    <Route path="monitoring/gizi" element={<Gizi />} />
-                    <Route path="monitoring/menyusui" element={<Menyusui />} />
-                    <Route path="monitoring/asi" element={<Asi />} />
+                    <Route path="monitoring/gizi" element={<AdminGizi />} />
+                    <Route path="monitoring/makanan" element={<MasterPangan />} />
+                    <Route path="monitoring/makanan/tambah" element={<AddMasterMakanan />} />
+                    <Route path="monitoring/kesehatan-nifas" element={<AdminKesehatanNifas />} />
+                    <Route path="monitoring/menyusui" element={<AdminMenyusui />} />
+                    <Route path="monitoring/kelancaran-asi" element={<AdminAsi />} />
                     <Route path="users" element={<UserManagement />} />
                     <Route path="admins" element={<AdminManagement />} />
                 </Route>
             </Route>
 
-            {/* ✅ User routes — hanya role user */}
             <Route element={<UserRoute user={user} />}>
                 <Route path="/user" element={<UserLayout user={user} />}>
                     <Route index element={<Navigate to="home" replace />} />
-                    <Route path="home" element={<Home />} />
+                    <Route path="home" element={<Home user={user} />} />
+                    <Route path="target-gizi" element={<TargetGizi />} />
+                    <Route path="monitoring/makanan" element={<FoodDiary />} />
+                    <Route path="monitoring/kesehatan-nifas" element={<ChecklistKesehatan />} />
+                    <Route path="monitoring/menyusui" element={<Menyusui />} />
+                    <Route path="monitoring/kelancaran-asi" element={<KelancaranAsi />} />
+                    <Route path="monitoring/pengetahuan" element={<KuesionerPengetahuan />} />
+                    <Route path="monitoring/sikap" element={<KuesionerSikap />} />
+                    <Route path="edukasi" element={<UserEdukasi />} />
+                    <Route path="gallery" element={<Gallery />} />
+                    <Route path="chat-asisten" element={<ChatAsisten />} />
+                    <Route path="profile" element={<Profile />} />
                 </Route>
             </Route>
 
-            {/* 404 fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

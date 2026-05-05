@@ -7,9 +7,9 @@ export function getStatusLabel(status) {
     case "normal":
       return "Normal";
     case "menyusui_0_6":
-      return "Menyusui 0-6 bulan";
+      return "AdminMenyusui 0-6 bulan";
     case "menyusui_6_12":
-      return "Menyusui 6-12 bulan";
+      return "AdminMenyusui 6-12 bulan";
     default:
       return status;
   }

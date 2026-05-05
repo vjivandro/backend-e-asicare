@@ -1,5 +1,5 @@
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { db } from "../../../services/firebase.js";
 
 const col = collection(db, "edukasi");
 

@@ -1,4 +1,4 @@
-import { db } from "../../services/firebase";
+import { db } from "../../../services/firebase.js";
 import { collection, getDocs } from "firebase/firestore";
 
 // DATA AKG IBU atau GIZI

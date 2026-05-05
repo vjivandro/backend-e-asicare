@@ -48,8 +48,8 @@ export default function App() {
   }
 
   return user ? (
-      <AppRoutes user={user} setUser={setUser} />
+    <AppRoutes user={user} setUser={setUser} />
   ) : (
-      <AppRoutes user={null} setUser={setUser} />
+    <AppRoutes user={null} setUser={setUser} />
   );
 }

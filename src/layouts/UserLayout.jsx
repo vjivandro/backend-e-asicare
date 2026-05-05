@@ -1,28 +1,24 @@
 import { useState } from "react";
-import { Menu } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar.jsx";
+import NutrinaFloatingChat from "../modules/user/chat/NutrinaFloatingChat.jsx";
 
-export default function UserLayout({ user}) {
+export default function UserLayout({ user }) {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen bg-gray-50">
+            <Sidebar open={open} setOpen={setOpen} role="user"/>
 
-            {/* Sidebar */}
-            <Sidebar open={open} setOpen={setOpen} role="user" />
+            <div className={`flex-1 w-full bg-gray-100 transition-all duration-300 ${open ? "md:ml-64" : "md:ml-20"}`}>
+                <Topbar user={user} onMenuClick={() => setOpen(true)}/>
 
-            {/* Main */}
-            <div className="flex-1 w-full bg-gray-100">
-
-                <Topbar user={user} onMenuClick={() => setOpen(true)} />
-
-                {/* Content */}
                 <div className="p-4 md:p-6">
-                    <Outlet />
+                    <Outlet/>
                 </div>
 
+                <NutrinaFloatingChat />
             </div>
         </div>
     );
