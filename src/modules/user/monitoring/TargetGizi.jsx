@@ -6,37 +6,32 @@ import {
     getDoc, setDoc, serverTimestamp
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom"; // 🌟 TAMBAHAN UNTUK NAVIGASI 🌟
 
 export default function TargetGizi() {
-    // 1. State untuk Manajemen User & Data
+    const navigate = useNavigate(); // Inisialisasi navigasi
     const [userId, setUserId] = useState(null);
     const [usia, setUsia] = useState('');
     const [statusMenyusui, setStatusMenyusui] = useState('6 Bulan Pertama');
     const [nutritionData, setNutritionData] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading untuk Auth
-    const [isCalculating, setIsCalculating] = useState(false); // Loading untuk Hitung
+    const [loading, setLoading] = useState(true);
+    const [isCalculating, setIsCalculating] = useState(false);
 
-    // 2. Listener Otomatis untuk Cek Login (Dynamic UID)
     useEffect(() => {
         const auth = getAuth();
-        // onAuthStateChanged akan memantau siapa yang login secara real-time
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUserId(user.uid);
-                console.log("User Login Detected:", user.uid);
             } else {
                 setUserId(null);
             }
             setLoading(false);
         });
-
-        return () => unsubscribe(); // Cleanup listener
+        return () => unsubscribe();
     }, []);
 
-    // 3. Fungsi Ambil Data dari Firestore (Dynamic Path)
     const fetchTarget = useCallback(async () => {
         if (!userId) return;
-
         try {
             const docRef = doc(db, "users", userId, "target_gizi", "profile");
             const snap = await getDoc(docRef);
@@ -69,7 +64,6 @@ export default function TargetGizi() {
         if (userId) fetchTarget();
     }, [userId, fetchTarget]);
 
-    // 4. Logika Perhitungan & Simpan Otomatis
     const handleCalculate = async () => {
         const usiaInt = parseInt(usia);
         if (!usiaInt) return alert("Masukkan usia Anda terlebih dahulu");
@@ -77,7 +71,6 @@ export default function TargetGizi() {
 
         setIsCalculating(true);
         try {
-            // Ambil AKG Dasar
             const akgRef = collection(db, "akg_ibu");
             const qAkg = query(akgRef, where("usia_min", "<=", usiaInt), where("usia_max", ">=", usiaInt));
             const akgSnap = await getDocs(qAkg);
@@ -85,7 +78,6 @@ export default function TargetGizi() {
 
             if (!akg) throw new Error("Data AKG tidak ditemukan");
 
-            // Ambil Tambahan Menyusui
             const statusKey = statusMenyusui === "6 Bulan Pertama" ? "0_6" :
                 statusMenyusui === "6 Bulan Kedua" ? "6_12" : "normal";
 
@@ -94,7 +86,6 @@ export default function TargetGizi() {
             const tambahanSnap = await getDocs(qTambahan);
             const tambahan = tambahanSnap.docs[0]?.data();
 
-            // Hitung Hasil Akhir
             const result = {
                 energi: akg.energi + (tambahan?.energi || 0),
                 protein: akg.protein + (tambahan?.protein || 0),
@@ -104,7 +95,7 @@ export default function TargetGizi() {
 
             setNutritionData(result);
 
-            // Simpan ke Firestore berdasarkan UID yang sedang aktif
+            // 1. Simpan ke data Profil User (Kandang Lama)
             const docRef = doc(db, "users", userId, "target_gizi", "profile");
             await setDoc(docRef, {
                 ...result,
@@ -112,6 +103,22 @@ export default function TargetGizi() {
                 status_menyusui: statusKey,
                 updated_at: serverTimestamp(),
             }, { merge: true });
+
+            // 2. 🌟 TAMBAHAN: Copy data ke koleksi utama agar dibaca Admin 🌟
+            const auth = getAuth();
+            const userName = auth.currentUser?.displayName || auth.currentUser?.email?.split('@')[0] || "User Nifas";
+
+            const adminDocRef = doc(db, "target_gizi", userId);
+            await setDoc(adminDocRef, {
+                ...result,
+                userId: userId,
+                userName: userName,
+                umur: usiaInt,
+                statusMenyusui: statusMenyusui, // Pakai text asli (misal: "6 Bulan Pertama")
+                createdAt: serverTimestamp(), // Menggunakan createdAt sesuai permintaan admin
+            }, { merge: true });
+
+            alert("Target Gizi berhasil dihitung dan disimpan!");
 
         } catch (error) {
             console.error("Error:", error);
@@ -129,13 +136,11 @@ export default function TargetGizi() {
         await setDoc(docRef, { cleared_at: serverTimestamp() }, { merge: true });
     };
 
-    // Helper Progress Bar
     const getProgress = (key, value) => {
         const maxMap = { energi: 3000, protein: 150, lemak: 100, karbohidrat: 400 };
         return Math.min(100, Math.round((value / (maxMap[key] || 100)) * 100));
     };
 
-    // Tampilan Loading Awal
     if (loading) {
         return (
             <div className="h-screen flex items-center justify-center bg-pink-50/20">
@@ -151,7 +156,6 @@ export default function TargetGizi() {
         <div className="min-h-screen bg-pink-50/20 p-4 md:p-8 font-sans text-gray-800">
             <div className="max-w-6xl mx-auto space-y-10">
 
-                {/* Header */}
                 <div className="flex justify-between items-center mb-6 pt-2">
                     <div>
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
@@ -161,40 +165,20 @@ export default function TargetGizi() {
                             Automated Calculation by e-ASI Care
                         </p>
                     </div>
-                    {/* Ikon Target Minimalis di Kanan Atas */}
                     <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-pink-50 text-pink-300">
                         <Target size={24} />
                     </div>
                 </div>
 
-                {/* Input Card */}
                 <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-pink-100 relative transition-all">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end"> {/* items-end untuk menyamakan baseline */}
-
-                        {/* Kolom Usia */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-pink-400 ml-1 uppercase tracking-widest">
-                                USIA IBU (TAHUN)
-                            </label>
-                            <input
-                                type="number"
-                                value={usia}
-                                onChange={(e) => setUsia(e.target.value)}
-                                className="w-full bg-gray-50 border-none rounded-2xl px-5 h-[56px] focus:ring-2 focus:ring-pink-300 transition-all font-bold text-lg"
-                                placeholder="Masukkan Usia"
-                            />
+                            <label className="text-[10px] font-black text-pink-400 ml-1 uppercase tracking-widest">USIA IBU (TAHUN)</label>
+                            <input type="number" value={usia} onChange={(e) => setUsia(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl px-5 h-[56px] focus:ring-2 focus:ring-pink-300 transition-all font-bold text-lg" placeholder="Masukkan Usia" />
                         </div>
-
-                        {/* Kolom Status Menyusui */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-pink-400 ml-1 uppercase tracking-widest">
-                                STATUS MENYUSUI
-                            </label>
-                            <select
-                                value={statusMenyusui}
-                                onChange={(e) => setStatusMenyusui(e.target.value)}
-                                className="w-full bg-gray-50 border-none rounded-2xl px-5 h-[56px] focus:ring-2 focus:ring-pink-300 cursor-pointer font-bold text-lg appearance-none"
-                            >
+                            <label className="text-[10px] font-black text-pink-400 ml-1 uppercase tracking-widest">STATUS MENYUSUI</label>
+                            <select value={statusMenyusui} onChange={(e) => setStatusMenyusui(e.target.value)} className="w-full bg-gray-50 border-none rounded-2xl px-5 h-[56px] focus:ring-2 focus:ring-pink-300 cursor-pointer font-bold text-lg appearance-none">
                                 <option value="6 Bulan Pertama">6 Bulan Pertama (Eksklusif)</option>
                                 <option value="6 Bulan Kedua">6 Bulan Kedua (MPASI)</option>
                                 <option value="Tidak Menyusui">Tidak Menyusui / Normal</option>
@@ -202,25 +186,16 @@ export default function TargetGizi() {
                         </div>
                     </div>
 
-                    {/* Tombol Aksi - Tinggi disamakan dengan input */}
                     <div className="flex gap-4 mt-8">
-                        <button
-                            onClick={handleCalculate}
-                            disabled={isCalculating}
-                            className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black h-[56px] rounded-2xl shadow-lg shadow-pink-100 active:scale-95 disabled:opacity-50 transition-all uppercase tracking-widest text-xs"
-                        >
+                        <button onClick={handleCalculate} disabled={isCalculating} className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black h-[56px] rounded-2xl shadow-lg shadow-pink-100 active:scale-95 disabled:opacity-50 transition-all uppercase tracking-widest text-xs">
                             {isCalculating ? "Menghitung..." : "Hitung & Simpan"}
                         </button>
-                        <button
-                            onClick={handleReset}
-                            className="bg-gray-100 w-[56px] h-[56px] flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 transition-colors"
-                        >
+                        <button onClick={handleReset} className="bg-gray-100 w-[56px] h-[56px] flex items-center justify-center rounded-2xl text-gray-400 hover:text-red-500 transition-colors">
                             <RotateCcw size={24} />
                         </button>
                     </div>
                 </div>
 
-                {/* Nutrition Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                     {[
                         { title: 'Energi', value: nutritionData?.energi || 0, unit: 'kkal', icon: '🔥', color: 'from-orange-400 to-red-500', key: 'energi' },
@@ -237,24 +212,23 @@ export default function TargetGizi() {
                                 <span className="text-[10px] font-bold text-gray-400">{item.unit}</span>
                             </div>
                             <div className="mt-5 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full bg-gradient-to-r ${item.color} transition-all duration-1000`}
-                                    style={{ width: `${getProgress(item.key, item.value)}%` }}
-                                ></div>
+                                <div className={`h-full bg-gradient-to-r ${item.color} transition-all duration-1000`} style={{ width: `${getProgress(item.key, item.value)}%` }}></div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Footer Banner */}
                 <div className="bg-gradient-to-br from-white to-pink-50 rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center gap-8 shadow-sm border border-white">
                     <span className="text-7xl drop-shadow-lg">👩‍🍼</span>
                     <div className="flex-1 text-center md:text-left">
                         <h3 className="text-2xl font-black text-gray-800 mb-2">Nutrisi Tepat, ASI Hebat!</h3>
                         <p className="text-gray-500 text-sm leading-relaxed max-w-xl">Data AKG Anda disimpan otomatis ke profil. Gunakan target ini untuk menjaga kualitas ASI harian demi tumbuh kembang si Kecil yang optimal.</p>
                     </div>
-                    {/*navigate("/user/monitoring/makanan")*/}
-                    <button className="bg-pink-500 text-white font-black py-4 px-10 rounded-2xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all flex items-center gap-2">
+                    {/* 🌟 TOMBOL NAVIGASI DIAKTIFKAN 🌟 */}
+                    <button
+                        onClick={() => navigate("/user/monitoring/makanan")}
+                        className="bg-pink-500 text-white font-black py-4 px-10 rounded-2xl shadow-lg shadow-pink-100 hover:bg-pink-600 transition-all flex items-center gap-2"
+                    >
                         <Utensils size={20} /> CATAT MAKANAN
                     </button>
                 </div>

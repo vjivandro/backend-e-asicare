@@ -45,6 +45,17 @@ export default function Topbar({ user, onMenuClick }) {
         };
     }, [user]);
 
+    const handleNotificationClick = () => {
+        const currentRole = (realtimeUser?.role || user?.role || "").toUpperCase();
+
+        // Cek dengan huruf kapital karena string sudah di-toUpperCase()
+        if (currentRole === "SUPERADMIN" || currentRole === "ADMIN") {
+            navigate('/admin/notifikasi');
+        } else {
+            navigate('/user/notifikasi');
+        }
+    };
+
     return (
         <div className="flex items-center justify-between bg-white px-4 md:px-6 py-3 shadow">
             <div className="flex items-center gap-3">
@@ -55,7 +66,7 @@ export default function Topbar({ user, onMenuClick }) {
 
             <div className="flex items-center gap-5">
                 <button
-                    onClick={() => navigate('/user/notifikasi')}
+                    onClick={() => handleNotificationClick()}
                     className="relative p-2 text-gray-500 hover:bg-gray-100 hover:text-pink-500 rounded-full transition-colors"
                 >
                     <Bell />

@@ -22,7 +22,7 @@ import ChecklistKesehatan from "../modules/user/monitoring/ChecklistKesehatan.js
 import AdminKesehatanNifas from "../modules/admin/monitoring/AdminKesehatanNifas.jsx";
 import Menyusui from "../modules/user/monitoring/Menyusui.jsx";
 import KelancaranAsi from "../modules/user/monitoring/KelancaranAsi.jsx";
-import KuesionerPengetahuan from "../modules/user/monitoring/pengetahuan/KuesionerPengetahuan.jsx";import Sikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
+import KuesionerPengetahuan from "../modules/user/monitoring/pengetahuan/KuesionerPengetahuan.jsx";
 import Profile from "../modules/user/profile/Profile.jsx";
 import KuesionerSikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
 import MonitoringKuesioner from "../modules/admin/monitoring/MonitoringKuesioner.jsx";
@@ -79,6 +79,7 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="monitoring/kuesioner" element={<MonitoringKuesioner />} />
                     <Route path="users" element={<UserManagement />} />
                     <Route path="admins" element={<AdminManagement />} />
+                    <Route path="notifikasi" element={<HalamanNotifikasi />} />
                 </Route>
             </Route>
 

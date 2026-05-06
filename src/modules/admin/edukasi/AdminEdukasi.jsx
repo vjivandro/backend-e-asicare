@@ -341,7 +341,6 @@ export default function AdminEdukasi() {
                     </div>
                 </div>
 
-                {/* DETAIL MODAL */}
                 {selectedItem && (
                     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[90vh]">
@@ -376,9 +375,7 @@ export default function AdminEdukasi() {
                                 </button>
                             </div>
 
-                            {/* Modal Body */}
                             <div className="p-6 overflow-y-auto custom-scrollbar">
-                                {/* Penanganan Media Dinamis */}
                                 {selectedItem.media && (() => {
                                     const mediaType = getMediaType(selectedItem.media);
 
@@ -401,7 +398,6 @@ export default function AdminEdukasi() {
                                             </div>
                                         );
                                     } else {
-                                        // TAMPILAN KHUSUS UNTUK PDF / WORD / LINK DOKUMEN
                                         return (
                                             <div className="mb-6">
                                                 <a
@@ -423,7 +419,6 @@ export default function AdminEdukasi() {
                                     }
                                 })()}
 
-                                {/* Content */}
                                 <div className="prose prose-pink max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
                                     {selectedItem.content}
                                 </div>
