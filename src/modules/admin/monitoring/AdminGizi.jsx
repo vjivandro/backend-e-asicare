@@ -389,7 +389,7 @@ export default function AdminGizi() {
                 <div className="flex justify-between items-center p-6 bg-gradient-to-r from-pink-50 to-white border-b border-pink-100">
                   <div>
                     <h3 className="text-xl font-bold text-gray-800">{isEditing ? "Ubah Parameter AKG" : "Tambah Data AKG Baru"}</h3>
-                    <p className="text-xs text-pink-400 font-medium mt-0.5">Atur ambang batas nutrisi berdasarkan usia[cite: 2]</p>
+                    <p className="text-xs text-pink-400 font-medium mt-0.5">Atur ambang batas nutrisi berdasarkan usia </p>
                   </div>
                   <button onClick={closeModal} className="w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:bg-pink-50 hover:text-pink-600 transition-all"><X size={20}/></button>
                 </div>
@@ -405,7 +405,7 @@ export default function AdminGizi() {
                     </div>
 
                     <div className="md:col-span-2 pt-2 flex items-center gap-3">
-                      <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest whitespace-nowrap">Target Nutrisi Harian[cite: 2]</span>
+                      <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest whitespace-nowrap">Target Nutrisi Harian </span>
                       <div className="w-full h-px bg-pink-100"></div>
                     </div>
 

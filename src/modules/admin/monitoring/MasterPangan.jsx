@@ -236,7 +236,7 @@ export default function MasterPangan() {
                         <div className="flex justify-between items-center p-6 bg-gradient-to-r from-pink-50 to-white border-b border-pink-100">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-800">{isEditing ? "Edit Data Master" : "Tambah Master Baru"}</h3>
-                                <p className="text-xs text-pink-400 font-medium mt-0.5">Referensi TKPI-2020[cite: 2]</p>
+                                <p className="text-xs text-pink-400 font-medium mt-0.5">Referensi TKPI-2020 </p>
                             </div>
                             <button onClick={closeModal} className="w-10 h-10 flex items-center justify-center rounded-full text-gray-300 hover:bg-pink-50 hover:text-pink-600"><X size={20}/></button>
                         </div>

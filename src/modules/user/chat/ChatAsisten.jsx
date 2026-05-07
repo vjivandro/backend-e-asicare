@@ -40,7 +40,7 @@ export default function ChatAsisten() {
         setIsTyping(true);
 
         try {
-            // 2. Panggil API Gemini (lewat chatService)[cite: 4, 5]
+            // 2. Panggil API Gemini (lewat chatService)
             const aiResponse = await getAssistantResponse(userText);
 
             // 3. Tambah respon bot ke UI
@@ -108,7 +108,7 @@ export default function ChatAsisten() {
                                 )}
                             </div>
 
-                            {/* Bubble Chat dengan Gradasi Tema[cite: 3] */}
+                            {/* Bubble Chat dengan Gradasi Tema  */}
                             <div className="flex flex-col">
                                 <div className={`p-4 rounded-2xl shadow-sm leading-relaxed text-[14px] whitespace-pre-wrap
                                 ${msg.sender === 'user'
@@ -138,7 +138,7 @@ export default function ChatAsisten() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input Area[cite: 3] */}
+            {/* Chat Input Area  */}
             <div className="p-4 bg-white border-t border-gray-50">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 focus-within:border-pink-300 transition-all">
                     <button type="button" className="p-2 text-gray-400 hover:text-pink-500 transition-colors">
