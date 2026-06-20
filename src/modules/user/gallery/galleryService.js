@@ -60,7 +60,7 @@ export const uploadGalleryPhotoBase64 = async (userId, file, photoData) => {
             userId: userId,
             image: base64String,
             filename: namaUnik,
-            category: photoData.category,
+            category: photoData.category || "Umum",
             date: photoData.date,
             createdAt: serverTimestamp()
         });

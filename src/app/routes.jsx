@@ -4,7 +4,6 @@ import AdminEdukasi from "../modules/admin/edukasi/AdminEdukasi.jsx";
 import AdminDashboard from "../modules/admin/dashboard/AdminDashboard.jsx";
 import AdminAsi from "../modules/admin/monitoring/AdminAsi.jsx";
 import AdminMenyusui from "../modules/admin/monitoring/AdminMenyusui.jsx";
-import AdminGizi from "../modules/admin/monitoring/AdminGizi.jsx";
 import UserManagement from "../modules/admin/user-management/UserManagement.jsx";
 import AdminManagement from "../modules/admin/user-management/AdminManagement.jsx";
 import UserLayout from "../layouts/UserLayout";
@@ -27,6 +26,10 @@ import Profile from "../modules/user/profile/Profile.jsx";
 import KuesionerSikap from "../modules/user/monitoring/sikap/KuesionerSikap.jsx";
 import MonitoringKuesioner from "../modules/admin/monitoring/MonitoringKuesioner.jsx";
 import HalamanNotifikasi from "../modules/user/profile/HalamanNotifikasi.jsx";
+import MasterAKG from "../modules/admin/monitoring/MasterAKG.jsx";
+import MonitoringGiziUser from "../modules/admin/monitoring/MonitoringGiziUser.jsx";
+import MonitoringCatatanMakan from "../modules/admin/monitoring/MonitoringCatatanMakan.jsx";
+import DetailCatatanMakan from "../modules/admin/monitoring/DetailCatatanMakan.jsx";
 
 function AdminRoute({ user }) {
     if (!user) return <Navigate to="/login" replace />;
@@ -70,8 +73,11 @@ export default function AppRoutes({ user, setUser }) {
                     <Route index element={<Navigate to="dashboard" replace />} />
                     <Route path="dashboard" element={<AdminDashboard />} />
                     <Route path="edukasi" element={<AdminEdukasi />} />
-                    <Route path="monitoring/gizi" element={<AdminGizi />} />
+                    <Route path="monitoring/master-akg" element={<MasterAKG />} />
+                    <Route path="monitoring/gizi" element={<MonitoringGiziUser />} />
                     <Route path="monitoring/makanan" element={<MasterPangan />} />
+                    <Route path="monitoring/catatan-makan-ibu" element={<MonitoringCatatanMakan />} />
+                    <Route path="/admin/monitoring/catatan-makan/:userId" element={<DetailCatatanMakan />} />
                     <Route path="monitoring/makanan/tambah" element={<AddMasterMakanan />} />
                     <Route path="monitoring/kesehatan-nifas" element={<AdminKesehatanNifas />} />
                     <Route path="monitoring/menyusui" element={<AdminMenyusui />} />

@@ -121,21 +121,25 @@ export default function MasterPangan() {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Master Data Pangan</h1>
-                        <p className="text-sm text-gray-500 italic">Database Nutrisi TKPI-2020</p>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#D81B60] to-[#FF6B9E]">
+                            Master Data Pangan
+                        </h1>
+                        <p className="text-gray-500 mt-1 text-sm">Database Nutrisi TKPI-2020</p>
                     </div>
+
                     <button
                         onClick={() => setShowModal(true)}
                         className="flex items-center justify-center gap-2 bg-[#D81B60] hover:bg-[#AD1457] text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-pink-100"
                     >
-                        <Plus size={18} /> Tambah Item
+                        <Plus size={18}/> Tambah Item
                     </button>
                 </div>
 
                 {/* Toolbar */}
-                <div className="bg-white p-4 rounded-2xl border border-pink-50 shadow-sm flex flex-col lg:flex-row gap-4">
+                <div
+                    className="bg-white p-4 rounded-2xl border border-pink-50 shadow-sm flex flex-col lg:flex-row gap-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-300" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-300" size={18}/>
                         <input
                             type="text"
                             placeholder="Cari nama atau kode makanan..."

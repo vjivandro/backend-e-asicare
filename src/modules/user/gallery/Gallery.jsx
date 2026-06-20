@@ -199,8 +199,13 @@ export default function Gallery() {
                                     ${isSaving ? 'opacity-50 cursor-wait' : ''}
                                 `}
                             >
-                                <input type="file" ref={fileInputRef} onChange={(e) => handleFile(e.target.files)}
-                                       accept="image/*" className="hidden" capture="environment" />
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={(e) => handleFile(e.target.files)}
+                                    accept="image/jpeg, image/png, image/jpg"
+                                    className="hidden"
+                                    capture="environment" />
 
                                 {isSaving ? (
                                     <div className="flex flex-col items-center gap-3">

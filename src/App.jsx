@@ -44,12 +44,20 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    // Tampilan Loading disamakan persis dengan komponen Monitoring
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 font-sans">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-8 h-8 border-4 border-pink-100 border-t-[#D81B60] rounded-full animate-spin mb-3"></div>
+            <p className="text-sm font-bold text-gray-400 animate-pulse">Memuat e-ASI Care...</p>
+          </div>
+        </div>
+    );
   }
 
   return user ? (
-    <AppRoutes user={user} setUser={setUser} />
+      <AppRoutes user={user} setUser={setUser} />
   ) : (
-    <AppRoutes user={null} setUser={setUser} />
+      <AppRoutes user={null} setUser={setUser} />
   );
 }

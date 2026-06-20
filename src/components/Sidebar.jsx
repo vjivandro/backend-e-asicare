@@ -15,11 +15,12 @@ import {
     HeartPulse,
     Baby,
     Droplets,
-    Activity, CircleUserRound, BookOpen, Heart, ListTodo
+    Activity, CircleUserRound, BookOpen, Heart, ListTodo, TargetIcon, HandPlatter
 } from "lucide-react";
 import {signOut} from "firebase/auth";
 import {auth} from "../services/firebase";
 import {useNavigate, useLocation} from "react-router-dom";
+import TargetGizi from "../modules/user/monitoring/TargetGizi.jsx";
 
 export default function Sidebar({open, setOpen, role}) {
     const navigate = useNavigate();
@@ -186,13 +187,34 @@ export default function Sidebar({open, setOpen, role}) {
                 {role === "superadmin" && (<>
                     <div className="pt-4 pb-2">
                         {open &&
+                            <p className="px-6 text-[11px] font-bold text-white/40 uppercase tracking-wider">Data Master</p>}
+                    </div>
+                    {/* Item Master yang tadinya submenu sekarang jadi section utama */}
+                    <SidebarItem
+                        icon={<Activity size={20}/>}
+                        label="AKG"
+                        open={open}
+                        active={isActive("/admin/monitoring/master-akg")}
+                        onClick={() => handleNavigate("/admin/monitoring/master-akg")}
+                    />
+
+                    <SidebarItem
+                        icon={<HandPlatter size={20}/>}
+                        label="Makanan"
+                        open={open}
+                        active={isActive("/admin/monitoring/makanan")}
+                        onClick={() => handleNavigate("/admin/monitoring/makanan")}
+                    />
+
+                    <div className="pt-4 pb-2">
+                        {open &&
                             <p className="px-6 text-[11px] font-bold text-white/40 uppercase tracking-wider">Manajemen
                                 Monitoring</p>}
                     </div>
                     {/* Item Monitoring yang tadinya submenu sekarang jadi section utama */}
                     <SidebarItem
-                        icon={<Activity size={20}/>}
-                        label="Gizi"
+                        icon={<TargetIcon size={20}/>}
+                        label="Target Gizi Ibu"
                         open={open}
                         active={isActive("/admin/monitoring/gizi")}
                         onClick={() => handleNavigate("/admin/monitoring/gizi")}
@@ -200,14 +222,14 @@ export default function Sidebar({open, setOpen, role}) {
 
                     <SidebarItem
                         icon={<Utensils size={20}/>}
-                        label="Data Makanan"
+                        label="Catatan Makan Ibu"
                         open={open}
-                        active={isActive("/admin/monitoring/makanan")}
-                        onClick={() => handleNavigate("/admin/monitoring/makanan")}
+                        active={isActive("/admin/monitoring/catatan-makan-ibu")}
+                        onClick={() => handleNavigate("/admin/monitoring/catatan-makan-ibu")}
                     />
 
                     <SidebarItem
-                        icon={<HeartPulse size={20} />}
+                        icon={<HeartPulse size={20}/>}
                         label="Kesehatan Nifas"
                         open={open}
                         active={isActive("/admin/monitoring/kesehatan-nifas")}

@@ -54,17 +54,15 @@ export default function MonitoringKuesioner() {
             {/* HEADER */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                        Monitoring <span className="text-[#D81B60]">Kuesioner</span>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#D81B60] to-[#FF6B9E]">
+                        Monitoring Kuesioner
                     </h1>
-                    <p className="mt-1 text-gray-500 text-sm md:text-base">
-                        Pantau hasil evaluasi Pengetahuan dan Sikap ibu nifas.
-                    </p>
+                    <p className="text-gray-500 mt-1 text-sm">Pantau hasil evaluasi Pengetahuan dan Sikap ibu nifas.</p>
                 </div>
 
                 {/* Search Bar */}
                 <div className="relative w-full md:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
                     <input
                         type="text"
                         placeholder="Cari nama ibu..."

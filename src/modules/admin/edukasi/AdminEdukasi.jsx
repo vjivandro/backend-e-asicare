@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faAdd, faPencilAlt, faTrash, faTimes,
@@ -131,25 +131,31 @@ export default function AdminEdukasi() {
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* HEADER + BUTTON */}
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div
+                    className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Daftar Edukasi</h2>
-                        <p className="text-sm text-gray-500 mt-1">Kelola konten edukasi untuk ibu menyusui.</p>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#D81B60] to-[#FF6B9E]">
+                            Daftar Edukasi
+                        </h1>
+                        <p className="text-gray-500 mt-1 text-sm">Kelola konten edukasi untuk ibu menyusui.</p>
                     </div>
+
                     <button
                         onClick={() => setShowModal(true)}
                         className="flex items-center justify-center gap-2 bg-pink-500 text-white px-5 py-2.5 rounded-xl hover:bg-pink-600 transition-colors font-medium shadow-sm shadow-pink-200"
                     >
-                        <FontAwesomeIcon icon={faAdd} />
+                        <FontAwesomeIcon icon={faAdd}/>
                         <span>Tambah Edukasi</span>
                     </button>
                 </div>
 
                 {/* MODAL FORM (ADD/EDIT) - Tidak ada perubahan di Form */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-lg transform transition-all">
-                            {/* ... (Isi Form persis seperti sebelumnya) ... */}
+                    <div
+                        className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div
+                            className="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-lg transform transition-all">
+                        {/* ... (Isi Form persis seperti sebelumnya) ... */}
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-bold text-gray-800">
                                     {editingId ? "Edit Edukasi" : "Tambah Edukasi Baru"}
