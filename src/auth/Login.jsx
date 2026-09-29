@@ -4,11 +4,13 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 
 import { auth, db } from "../services/firebase";
 import {doc, updateDoc, serverTimestamp, getDoc} from "firebase/firestore";
 import frontLogo from "../assets/front-logo.png";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login({ setUser }) {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const googleProvider = new GoogleAuthProvider();
 
     const handleLogin = async (e) => {
@@ -87,14 +89,25 @@ export default function Login({ setUser }) {
                         <div>
                             <div className="flex justify-between mb-2">
                                 <label className="text-[12px] font-bold text-gray-700">Password</label>
-                                <button className="text-[11px] font-bold text-[#D81B60] hover:underline">Lupa Password?</button>
+                                {/* Lupa Password ditutup sementara karena belum berfungsi */}
+                                {/* <button className="text-[11px] font-bold text-[#D81B60] hover:underline">Lupa Password?</button> */}
                             </div>
-                            <input
-                                type="password"
-                                placeholder="Minimal 8 karakter"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#FF85B3] focus:ring-4 focus:ring-pink-50 outline-none transition-all"
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Minimal 8 karakter"
+                                    className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-200 focus:border-[#FF85B3] focus:ring-4 focus:ring-pink-50 outline-none transition-all"
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-[#D81B60] transition-colors"
+                                    aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+                                >
+                                    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
+                                </button>
+                            </div>
                         </div>
 
                         <button

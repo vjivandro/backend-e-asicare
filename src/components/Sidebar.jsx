@@ -157,13 +157,14 @@ export default function Sidebar({open, setOpen, role}) {
                             {open &&
                                 <p className="px-6 text-[11px] font-bold text-white/40 uppercase tracking-wider">Layanan</p>}
                         </div>
-                        <SidebarItem
+                        {/* Gallery ditutup sementara */}
+                        {/* <SidebarItem
                             icon={<Image size={20}/>}
                             label="Gallery"
                             open={open}
                             active={isActive("/user/gallery")}
                             onClick={() => handleNavigate("/user/gallery")}
-                        />
+                        /> */}
                         <SidebarItem
                             icon={<MessageCircle size={20}/>}
                             label="Chat Asisten"
@@ -252,13 +253,14 @@ export default function Sidebar({open, setOpen, role}) {
                         onClick={() => handleNavigate("/admin/monitoring/kelancaran-asi")}
                     />
 
-                    <SidebarItem
+                    {/* Galeri User ditutup sementara */}
+                    {/* <SidebarItem
                         icon={<Image size={20}/>}
                         label="Galeri User"
                         open={open}
                         active={isActive("/admin/monitoring/gallery")}
                         onClick={() => handleNavigate("/admin/monitoring/gallery")}
-                    />
+                    /> */}
 
                     <SidebarItem
                         icon={<ListTodo size={20}/>}

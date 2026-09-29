@@ -87,7 +87,8 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="users" element={<UserManagement />} />
                     <Route path="admins" element={<AdminManagement />} />
                     <Route path="notifikasi" element={<HalamanNotifikasi />} />
-                    <Route path="monitoring/gallery" element={<AdminGallery />} />
+                    {/* Gallery ditutup sementara */}
+                    {/* <Route path="monitoring/gallery" element={<AdminGallery />} /> */}
                 </Route>
             </Route>
 
@@ -103,7 +104,8 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="monitoring/pengetahuan" element={<KuesionerPengetahuan />} />
                     <Route path="monitoring/sikap" element={<KuesionerSikap />} />
                     <Route path="edukasi" element={<UserEdukasi />} />
-                    <Route path="gallery" element={<Gallery />} />
+                    {/* Gallery ditutup sementara */}
+                    {/* <Route path="gallery" element={<Gallery />} /> */}
                     <Route path="chat-asisten" element={<ChatAsisten />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="notifikasi" element={<HalamanNotifikasi />} />
