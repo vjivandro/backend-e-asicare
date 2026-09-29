@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { db, auth } from "../../../../services/firebase"; // Sesuaikan path
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 
 // Data Soal
 export const SOAL_PENGETAHUAN = [
@@ -48,9 +48,27 @@ export const useKuesionerHandler = () => {
         else kategori = "Kurang";
 
         const user = auth.currentUser;
+        let namaUser = user?.displayName || "Bunda"; // Nilai default awal
+
+        // Mulai proses penarikan nama dari Firestore
+        if (user) {
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    // Mengambil field nama (sesuaikan jika di database Anda bernama 'nama' atau 'username')
+                    namaUser = userData.name || userData.username || userData.nama || namaUser;
+                }
+            } catch (error) {
+                console.error("Gagal mengambil nama dari dokumen user:", error);
+            }
+        }
+
         const finalResult = {
             userId: user?.uid || "anon",
-            nama: user?.displayName || "Bunda",
+            nama: namaUser, // <--- Sekarang menggunakan nama valid dari database
             tanggal: serverTimestamp(),
             jawaban: detailJawaban,
             skorBenar,

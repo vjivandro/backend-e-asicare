@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {Send, Bot, Paperclip, X, Minimize2} from 'lucide-react';
-import {auth} from "../../../services/firebase.js";
+import {auth, db} from "../../../services/firebase.js";
+import {doc, getDoc} from "firebase/firestore";
 import {getAssistantResponse} from "./chatService.js";
 import nutrinaImg from "../../../assets/nutrina-asist.jpeg";
 
@@ -9,7 +10,7 @@ export default function NutrinaFloatingChat() {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: `Halo, Bunda ${auth.currentUser?.displayName || 'Juris'}! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu?`,
+            text: `Halo, Bunda! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu?`,
             sender: 'bot',
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
         },
@@ -21,6 +22,38 @@ export default function NutrinaFloatingChat() {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
     };
+
+    // Ambil nama user dari Firestore untuk sapaan
+    useEffect(() => {
+        const fetchUserName = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                let namaBunda = user.displayName;
+
+                if (!namaBunda) {
+                    try {
+                        const userDoc = await getDoc(doc(db, "users", user.uid));
+                        if (userDoc.exists()) {
+                            const data = userDoc.data();
+                            namaBunda = data.name || data.username || data.nama;
+                        }
+                    } catch (error) {
+                        console.error("Gagal mengambil nama:", error);
+                    }
+                }
+
+                const finalName = namaBunda || "Bunda";
+
+                setMessages(prev => {
+                    const newMsgs = [...prev];
+                    newMsgs[0].text = `Halo, Bunda ${finalName}! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu?`;
+                    return newMsgs;
+                });
+            }
+        };
+
+        fetchUserName();
+    }, []);
 
     useEffect(() => {
         if (isOpen) scrollToBottom();

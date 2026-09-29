@@ -1,24 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from "../../../services/firebase";
+import { auth, db } from "../../../services/firebase";
 import { getDailyIntake, deleteFoodEntry } from "./userMonitoringService";
 import FoodSearch from "./FoodSearch";
 import AddFoodModal from "../components/AddFoodModal";
 import { Utensils, Clock, Info, Trash2, Activity } from 'lucide-react';
+import { getDoc, getDocs, query, where, collection, doc } from "firebase/firestore";
+
+// --- Helper: tanggal lokal (bukan UTC) ---
+// new Date().toISOString() selalu memakai UTC, jadi antara jam 00:00–06:59 WIB
+// (UTC+7) tanggalnya masih "kemarin" menurut UTC. Fungsi ini mengoreksi itu
+// dengan menggeser waktu sesuai offset timezone browser sebelum di-slice.
+function getLocalDateString() {
+    const now = new Date();
+    const offsetMs = now.getTimezoneOffset() * 60000;
+    const local = new Date(now.getTime() - offsetMs);
+    return local.toISOString().split('T')[0];
+}
 
 export default function FoodDiary() {
     const [dailyData, setDailyData] = useState({ meals: [], total_harian: { energi: 0, protein: 0, lemak: 0, karbohidrat: 0 } });
     const [loading, setLoading] = useState(true);
     const [selectedFood, setSelectedFood] = useState(null);
 
-    const target = { energi: 2250, protein: 80, lemak: 70, karbohidrat: 350 };
-    const today = new Date().toISOString().split('T')[0];
+    // Menggunakan state agar nilai target bisa diperbarui dari database
+    const [target, setTarget] = useState({ energi: 0, protein: 0, lemak: 0, karbohidrat: 0 });
+    const today = getLocalDateString();
 
-    const loadData = async () => {
+    const loadData = async (uid) => {
         setLoading(true);
         try {
-            if (auth.currentUser) {
-                const data = await getDailyIntake(auth.currentUser.uid, today);
-                setDailyData(data);
+            // 1. Ambil data makanan harian
+            const data = await getDailyIntake(uid, today);
+            setDailyData(data);
+
+            // 2. Ambil target gizi dari koleksi "target_gizi"
+            // Document ID di koleksi ini sama dengan uid user, jadi bisa langsung
+            // getDoc (1 read, tanpa index) — lebih cepat & lebih murah daripada query.
+            let targetData = null;
+            const directRef = doc(db, "target_gizi", uid);
+            const directSnap = await getDoc(directRef);
+
+            if (directSnap.exists()) {
+                targetData = directSnap.data();
+            } else {
+                // Fallback untuk dokumen lama yang mungkin masih pakai auto-ID
+                // dengan field "userId" alih-alih doc ID = uid.
+                const q = query(collection(db, "target_gizi"), where("userId", "==", uid));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    targetData = querySnapshot.docs[0].data();
+                }
+            }
+
+            if (targetData) {
+                setTarget({
+                    energi: targetData.energi || 0,
+                    protein: targetData.protein || 0,
+                    lemak: targetData.lemak || 0,
+                    karbohidrat: targetData.karbohidrat || 0
+                });
             }
         } catch (error) {
             console.error(error);
@@ -27,15 +67,30 @@ export default function FoodDiary() {
         }
     };
 
-    useEffect(() => { loadData(); }, []);
+    useEffect(() => {
+        // Menunggu status auth benar-benar resolve, bukan mengecek
+        // auth.currentUser langsung di mount (bisa masih null sesaat
+        // walau user sebenarnya sudah login).
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadData(user.uid);
+            } else {
+                setLoading(false);
+                setDailyData({ meals: [], total_harian: { energi: 0, protein: 0, lemak: 0, karbohidrat: 0 } });
+            }
+        });
+        return () => unsubscribe();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // --- FUNGSI HANDLE DELETE ---
     const handleDelete = async (meal) => {
+        if (!auth.currentUser) return;
         if (window.confirm(`Yakin ingin menghapus ${meal.nama} dari daftar?`)) {
             try {
                 setLoading(true);
                 await deleteFoodEntry(auth.currentUser.uid, today, meal);
-                await loadData();
+                await loadData(auth.currentUser.uid);
             } catch (error) {
                 console.error(error);
                 alert("Gagal menghapus makanan.");
@@ -45,7 +100,15 @@ export default function FoodDiary() {
         }
     };
 
+    const handleRefresh = () => {
+        if (auth.currentUser) loadData(auth.currentUser.uid);
+    };
+
     const getStatusInfo = (current, targetValue) => {
+        // Guard: hindari NaN/Infinity saat target belum ter-load (masih 0)
+        if (!targetValue || targetValue <= 0) {
+            return { percent: 0, label: "MENUNGGU TARGET", color: "text-gray-400", dot: "bg-gray-300" };
+        }
         const percent = Math.min(Math.round((current / targetValue) * 100), 100);
         if (percent < 80) return { percent, label: "KURANG", color: "text-rose-500", dot: "bg-rose-500" };
         if (percent <= 110) return { percent, label: "CUKUP", color: "text-emerald-500", dot: "bg-emerald-500" };
@@ -55,7 +118,7 @@ export default function FoodDiary() {
     return (
         <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6 mt-2 font-sans pb-24">
 
-            {/* --- HEADER MINIMALIS (Sesuai Preferensi Target Gizi) --- */}
+            {/* --- HEADER MINIMALIS --- */}
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
@@ -65,7 +128,7 @@ export default function FoodDiary() {
                         Catat suapan nutrisi harian dan pantau pencapaian target gizi Anda secara langsung.
                     </p>
                 </div>
-                {/* Ikon Dekoratif Kanan Atas (Opsional, agar tidak terlalu kosong) */}
+                {/* Ikon Dekoratif Kanan Atas */}
                 <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-pink-50 text-pink-300">
                     <Utensils size={24} />
                 </div>
@@ -101,7 +164,10 @@ export default function FoodDiary() {
                                             </div>
                                             <div className="space-y-3">
                                                 {mealsInCategory.map((meal, index) => (
-                                                    <div key={index} className="bg-white p-4 sm:p-5 rounded-[1.5rem] border border-pink-50 flex items-center justify-between group hover:border-pink-200 hover:shadow-md transition-all shadow-sm pr-4">
+                                                    <div
+                                                        key={meal.id ?? `${kategori}-${meal.nama}-${meal.waktu}-${index}`}
+                                                        className="bg-white p-4 sm:p-5 rounded-[1.5rem] border border-pink-50 flex items-center justify-between group hover:border-pink-200 hover:shadow-md transition-all shadow-sm pr-4"
+                                                    >
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-400 group-hover:bg-gradient-to-tr from-[#D81B60] to-[#FF6B9E] group-hover:text-white transition-all shrink-0 shadow-sm">
                                                                 <Utensils size={20} />
@@ -117,7 +183,7 @@ export default function FoodDiary() {
                                                         {/* Bagian Kanan: Kalori & Tombol Hapus */}
                                                         <div className="flex items-center gap-4">
                                                             <div className="text-right">
-                                                                <p className="text-xl font-black text-gray-900 leading-none">{meal.energi.toFixed(0)}</p>
+                                                                <p className="text-xl font-black text-gray-900 leading-none">{(meal.energi ?? 0).toFixed(0)}</p>
                                                                 <p className="text-[9px] text-gray-400 font-black uppercase mt-1 tracking-widest">kkal</p>
                                                             </div>
                                                             {/* Tombol Delete */}
@@ -166,7 +232,7 @@ export default function FoodDiary() {
             </div>
 
             {selectedFood && (
-                <AddFoodModal food={selectedFood} currentMeals={dailyData.meals} onClose={() => setSelectedFood(null)} onRefresh={loadData} />
+                <AddFoodModal food={selectedFood} currentMeals={dailyData.meals} onClose={() => setSelectedFood(null)} onRefresh={handleRefresh} />
             )}
         </div>
     );

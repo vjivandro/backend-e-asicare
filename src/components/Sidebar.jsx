@@ -253,6 +253,14 @@ export default function Sidebar({open, setOpen, role}) {
                     />
 
                     <SidebarItem
+                        icon={<Image size={20}/>}
+                        label="Galeri User"
+                        open={open}
+                        active={isActive("/admin/monitoring/gallery")}
+                        onClick={() => handleNavigate("/admin/monitoring/gallery")}
+                    />
+
+                    <SidebarItem
                         icon={<ListTodo size={20}/>}
                         label="Kuesioner"
                         open={open}

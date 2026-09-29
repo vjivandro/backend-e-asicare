@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { db, auth } from "../../../../services/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc } from "firebase/firestore";
 
 // Data Soal Sikap dari Instrumen
 export const SOAL_SIKAP = [
@@ -52,9 +52,30 @@ export const useSikapHandler = () => {
         const kategori = nilaiPersen >= 56 ? "Positif" : "Negatif";
 
         const user = auth.currentUser;
+        let namaUser = user?.displayName || "Bunda";
+
+        // Proses penarikan nama dari Firestore
+        if (user) {
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    console.log("Data User dari Firestore:", userData);
+                    namaUser = userData.name || userData.username || userData.nama || namaUser;
+                    console.log("Nama yang akan disimpan:", namaUser);
+                } else {
+                    console.log("Dokumen user TIDAK DITEMUKAN di koleksi 'users' dengan UID:", user.uid);
+                }
+            } catch (error) {
+                console.error("Gagal mengambil nama dari dokumen user:", error);
+            }
+        }
+
         const finalResult = {
             userId: user?.uid || "anon",
-            nama: user?.displayName || "Bunda",
+            nama: namaUser, // Menggunakan nama valid dari database
             tanggal: serverTimestamp(),
             jawaban: detailJawaban,
             totalSkor,

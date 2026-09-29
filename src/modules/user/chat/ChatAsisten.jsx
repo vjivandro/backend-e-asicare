@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, Paperclip, MoreVertical } from 'lucide-react';
-import { auth } from "../../../services/firebase";
+import { auth, db } from "../../../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { getAssistantResponse } from "./chatService.js";
 import nutrinaImg from "../../../assets/nutrina-asist.jpeg";
 
@@ -8,7 +9,7 @@ export default function ChatAsisten() {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: `Halo, Bunda ${auth.currentUser?.displayName || 'Juris Vassa'}! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu seputar gizi atau kendala menyusui hari ini?`,
+            text: `Halo, Bunda! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu seputar gizi atau kendala menyusui hari ini?`,
             sender: 'bot',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         },
@@ -21,6 +22,39 @@ export default function ChatAsisten() {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
+    // Ambil nama user dari Firestore untuk sapaan
+    useEffect(() => {
+        const fetchUserName = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                let namaBunda = user.displayName;
+
+                // Jika dari Google Sign-In kosong, ambil dari database
+                if (!namaBunda) {
+                    try {
+                        const userDoc = await getDoc(doc(db, "users", user.uid));
+                        if (userDoc.exists()) {
+                            const data = userDoc.data();
+                            namaBunda = data.name || data.username || data.nama;
+                        }
+                    } catch (error) {
+                        console.error("Gagal mengambil nama:", error);
+                    }
+                }
+
+                const finalName = namaBunda || "Bunda"; // Fallback akhir jika di database juga kosong
+
+                setMessages(prev => {
+                    const newMsgs = [...prev];
+                    newMsgs[0].text = `Halo, Bunda ${finalName}! \nSaya Nutrina, asisten pintar e-ASI Care. Ada yang bisa Nutrina bantu seputar gizi atau kendala menyusui hari ini?`;
+                    return newMsgs;
+                });
+            }
+        };
+
+        fetchUserName();
+    }, []);
 
     useEffect(() => {
         scrollToBottom();
@@ -61,7 +95,7 @@ export default function ChatAsisten() {
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
 
-            {/* Chat Header - Ukuran diperbesar ke w-12 agar Nutrina menonjol */}
+            {/* Chat Header */}
             <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full overflow-hidden shadow-md border-2 border-pink-100 bg-pink-50 flex items-center justify-center">
@@ -89,8 +123,6 @@ export default function ChatAsisten() {
                 {messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-
-                            {/* Avatar Dinamis - Bot diperbesar sedikit ke w-10 */}
                             <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center shadow-sm overflow-hidden border
                             ${msg.sender === 'user' ? 'bg-pink-100 border-pink-200' : 'bg-white border-gray-100'}`}>
                                 {msg.sender === 'user' ? (
@@ -107,8 +139,6 @@ export default function ChatAsisten() {
                                     />
                                 )}
                             </div>
-
-                            {/* Bubble Chat dengan Gradasi Tema  */}
                             <div className="flex flex-col">
                                 <div className={`p-4 rounded-2xl shadow-sm leading-relaxed text-[14px] whitespace-pre-wrap
                                 ${msg.sender === 'user'
@@ -124,7 +154,6 @@ export default function ChatAsisten() {
                     </div>
                 ))}
 
-                {/* Indikator Mengetik */}
                 {isTyping && (
                     <div className="flex justify-start items-center gap-3 animate-pulse">
                         <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-gray-100">
@@ -138,7 +167,7 @@ export default function ChatAsisten() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input Area  */}
+            {/* Chat Input Area */}
             <div className="p-4 bg-white border-t border-gray-50">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 focus-within:border-pink-300 transition-all">
                     <button type="button" className="p-2 text-gray-400 hover:text-pink-500 transition-colors">

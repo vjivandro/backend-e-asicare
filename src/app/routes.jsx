@@ -30,6 +30,7 @@ import MasterAKG from "../modules/admin/monitoring/MasterAKG.jsx";
 import MonitoringGiziUser from "../modules/admin/monitoring/MonitoringGiziUser.jsx";
 import MonitoringCatatanMakan from "../modules/admin/monitoring/MonitoringCatatanMakan.jsx";
 import DetailCatatanMakan from "../modules/admin/monitoring/DetailCatatanMakan.jsx";
+import AdminGallery from "../modules/admin/monitoring/AdminGallery.jsx";
 
 function AdminRoute({ user }) {
     if (!user) return <Navigate to="/login" replace />;
@@ -86,6 +87,7 @@ export default function AppRoutes({ user, setUser }) {
                     <Route path="users" element={<UserManagement />} />
                     <Route path="admins" element={<AdminManagement />} />
                     <Route path="notifikasi" element={<HalamanNotifikasi />} />
+                    <Route path="monitoring/gallery" element={<AdminGallery />} />
                 </Route>
             </Route>
 

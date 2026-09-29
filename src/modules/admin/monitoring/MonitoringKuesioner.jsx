@@ -49,6 +49,7 @@ export default function MonitoringKuesioner() {
         (item.nama || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen">
             {/* HEADER */}
@@ -128,6 +129,7 @@ export default function MonitoringKuesioner() {
                         ) : (
                             filteredData.map((item) => (
                                 <tr key={item.id} className="hover:bg-pink-50/30 transition-colors group">
+                                    {/*<td className="px-6 py-5 font-bold text-gray-900">{item.nama || "User"}</td>*/}
                                     <td className="px-6 py-5 font-bold text-gray-900">{item.nama || "User"}</td>
                                     <td className="px-6 py-5 text-gray-500">{formatDate(item.tanggal)}</td>
                                     <td className="px-6 py-5 text-center font-bold text-gray-700">
